@@ -7,6 +7,8 @@
 		<dict>
 			<key>BinaryPath</key>
 			<string>ExpoModulesJSI.framework/ExpoModulesJSI</string>
+			<key>DebugSymbolsPath</key>
+			<string>dSYMs</string>
 			<key>LibraryIdentifier</key>
 			<string>ios-arm64_x86_64-simulator</string>
 			<key>LibraryPath</key>

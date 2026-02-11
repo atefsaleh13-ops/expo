@@ -31,55 +31,11 @@ done
 # e.g. Release-iphone, Release-iphonesimulator
 BUILD_NAME="$CONFIGURATION-$PLATFORM_NAME"
 
-# ARCHIVES_DIR_PATH="Archives"
-# XCARCHIVE_PATH="$ARCHIVES_DIR_PATH/$BUILD_NAME.xcarchive"
-
 # Clean build products in DerivedData
 rm -rf $BUILD_PRODUCTS_PATH
 
-# Clean Archives folder
-# rm -rf "$ARCHIVES"
-
 # Remove existing .xcframework
 rm -rf "$XCFRAMEWORK_PATH"
-
-# xcodebuild \
-#   archive \
-#   -workspace . \
-#   -scheme "$PACKAGE_NAME" \
-#   -destination "generic/platform=$PLATFORM_DESTINATION" \
-#   -archivePath "$XCARCHIVE_PATH" \
-#   -derivedDataPath "$DERIVED_DATA_PATH" \
-#   -quiet \
-#   BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
-#   SKIP_INSTALL=NO \
-#   DEBUG_INFORMATION_FORMAT=dwarf-with-dsym
-
-# FRAMEWORK_PATH="$XCARCHIVE_PATH/Products/usr/local/lib/$PACKAGE_NAME.framework"
-# FRAMEWORK_MODULES_PATH="$FRAMEWORK_PATH/Modules"
-# mkdir -p $FRAMEWORK_MODULES_PATH
-
-# BUILD_PRODUCTS_PATH="$DERIVED_DATA_PATH/Build/Intermediates.noindex/ArchiveIntermediates/$PACKAGE_NAME/BuildProductsPath/$BUILD_NAME"
-# SWIFT_MODULE_PATH="$BUILD_PRODUCTS_PATH/$PACKAGE_NAME.swiftmodule"
-
-# # for swift_interface in $SWIFT_MODULE_PATH/*.{private,package}.swiftinterface; do
-#   # rm -rf "$swift_interface"
-#   # echo "Found Swift interface: ${swift_interface}"
-#   # perl -i -p0e 's/\@usableFromInline\s+internal protocol _ConstraintThatIsNotPartOfTheAPIOfThisLibrary \{\}\s*//g' "$swift_interface"
-# # done
-
-# # Copy .swiftmodule file to .framework
-# if [ -d $SWIFT_MODULE_PATH ]
-# then
-#   cp -r $SWIFT_MODULE_PATH $FRAMEWORK_MODULES_PATH
-# fi
-
-# xcodebuild \
-#   -create-xcframework \
-#   -framework "$FRAMEWORK_PATH" \
-#   -output "$XCFRAMEWORK_PATH"
-
-# exit 0;
 
 xcodebuild \
   build \
@@ -95,11 +51,9 @@ xcodebuild \
 # Create .xcframework
 xcodebuild \
   -create-xcframework \
-  -framework "${BUILD_PRODUCTS_PATH}/${BUILD_NAME}/PackageFrameworks/${PACKAGE_NAME}.framework" \
+  -framework "${PWD}/${BUILD_PRODUCTS_PATH}/${BUILD_NAME}/PackageFrameworks/${PACKAGE_NAME}.framework" \
+  -debug-symbols "${PWD}/${BUILD_PRODUCTS_PATH}/${BUILD_NAME}/${PACKAGE_NAME}.framework.dSYM" \
   -output "$XCFRAMEWORK_PATH"
-
-# TODO: I could not get this to work, it throws saying it is not a valid debug symbols file
-# -debug-symbols "${BUILD_PRODUCTS_PATH}/${CONFIGURATION}-${PLATFORM_NAME}/${PACKAGE_NAME}.framework.dSYM" \
 
 for product_path in $BUILD_PRODUCTS_PATH/*/; do
   swiftmodule_src_path="${product_path}${PACKAGE_NAME}.swiftmodule"
