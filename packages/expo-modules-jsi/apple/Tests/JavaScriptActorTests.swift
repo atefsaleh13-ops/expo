@@ -120,31 +120,31 @@ struct JavaScriptActorTests {
 
   // MARK: - Execute tests
 
-//  @Test
-//  func `execute runs async operation in isolation`() async throws {
-//    // async outside, async inside
-//    try await runtime.execute {
-//      JavaScriptActor.assertIsolated()
-//      try await Task.sleep(nanoseconds: 0) // makes the closure async
-//      JavaScriptActor.assertIsolated()
-//    }
-//  }
+  @Test
+  func `execute runs async operation in isolation`() async throws {
+    // async outside, async inside
+    try await runtime.execute {
+      JavaScriptActor.assertIsolated()
+      try await Task.sleep(nanoseconds: 0) // makes the closure async
+      JavaScriptActor.assertIsolated()
+    }
+  }
 
-//  @Test
-//  func `execute runs async operation in isolation (blocking)`() throws {
-//    // sync outside, async inside
-//    try runtime.execute {
-//      JavaScriptActor.assertIsolated()
-//      try await Task.sleep(nanoseconds: 0) // makes the closure async
-//      JavaScriptActor.assertIsolated()
-//    }
-//  }
+  @Test
+  func `execute runs async operation in isolation (blocking)`() throws {
+    // sync outside, async inside
+    try runtime.execute {
+      JavaScriptActor.assertIsolated()
+      try await Task.sleep(nanoseconds: 0) // makes the closure async
+      JavaScriptActor.assertIsolated()
+    }
+  }
 
-//  @Test
-//  func `execute runs non-async operation in isolation`() throws {
-//    // sync outside, sync inside
-//    try runtime.execute {
-//      JavaScriptActor.assertIsolated()
-//    }
-//  }
+  @Test
+  func `execute runs non-async operation in isolation`() throws {
+    // sync outside, sync inside
+    try runtime.execute {
+      JavaScriptActor.assertIsolated()
+    }
+  }
 }

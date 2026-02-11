@@ -13,11 +13,23 @@ namespace react = facebook::react;
 
 namespace expo {
 
-std::shared_ptr<react::RuntimeScheduler> runtimeSchedulerFromRuntime(jsi::Runtime &runtime) {
+/**
+ Returns a reference to the RuntimeScheduler from the runtime binding.
+ The returned reference is not owned and should not be deleted.
+ */
+std::shared_ptr<react::RuntimeScheduler> runtimeSchedulerForRuntime(jsi::Runtime &runtime) {
   if (auto binding = react::RuntimeSchedulerBinding::getBinding(runtime)) {
     return binding->getRuntimeScheduler();
   }
-  return nullptr;
+  // If no binding is found (can happen when the runtime is not initialized by React Native),
+  // create a simple RuntimeExecutor that just invokes the callback immediately.
+  // It's not great that we capture the runtime by reference, but the runtime scheduler
+  // will never call it when the runtime is already destroyed so in theory it's safe.
+  react::RuntimeExecutor runtimeExecutor = [&runtime](std::function<void(jsi::Runtime&)>&& callback) {
+    callback(runtime);
+  };
+  // Create the RuntimeScheduler
+  return std::make_shared<react::RuntimeScheduler>(runtimeExecutor);
 }
 
 /**
@@ -28,7 +40,7 @@ private:
   std::shared_ptr<react::RuntimeScheduler> reactRuntimeScheduler;
 
 public:
-  RuntimeScheduler(jsi::Runtime &runtime) : reactRuntimeScheduler(runtimeSchedulerFromRuntime(runtime)) {}
+  RuntimeScheduler(jsi::Runtime &runtime) : reactRuntimeScheduler(runtimeSchedulerForRuntime(runtime)) {}
 
   using ScheduleTaskCallback = void(^)();
 

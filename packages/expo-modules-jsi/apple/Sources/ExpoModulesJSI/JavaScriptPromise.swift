@@ -116,11 +116,12 @@ public struct JavaScriptPromise: JavaScriptType, ~Copyable {
     guard !rejectFunction.isEmpty else {
       preconditionFailure("Cannot settle a promise more than once")
     }
-    // Create a JS error from any (native) error.
-    let errorValue = JavaScriptError(runtime, message: error.localizedDescription).asValue()
 
     // `reject` is not isolated, so make sure to jump to JS thread.
     runtime.schedule(priority: .immediate) { [resolveFunction, rejectFunction] in
+      // Create a JS error from any (native) error.
+      let errorValue = JavaScriptError(runtime, message: error.localizedDescription).asValue()
+
       // Call the actual rejecter given in the Promise setup.
       // This will also call `deferredPromise.reject` in the `then` handler.
       _ = try! rejectFunction.take().getFunction().call(arguments: errorValue)

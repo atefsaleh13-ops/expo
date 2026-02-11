@@ -63,97 +63,58 @@ struct JavaScriptRuntimeTests {
     #expect((runtime != JavaScriptRuntime()) == true)
   }
 
-//  @Test
-//  @JavaScriptActor
-//  func `schedule executes closure on JavaScript thread`() async throws {
-//    var executed = false
-//
-//    runtime.schedule {
-//      #expect(self.runtime.isOnJavaScriptThread())
-//      executed = true
-//    }
-//
-//    // Give the scheduler time to execute
-//    try await Task.sleep(for: .milliseconds(100))
-//    #expect(executed == true)
-//  }
+  @Test
+  func `execute sync evaluates JavaScript from non-async context`() throws {
+    let result = try runtime.execute {
+      try self.runtime.eval("2 + 2").getInt()
+    }
+    #expect(result == 4)
+  }
 
-//  @Test
-//  @JavaScriptActor
-//  func `schedule async executes async closure`() async throws {
-//    var executed = false
-//
-//    runtime.schedule {
-//      #expect(self.runtime.isOnJavaScriptThread())
-//      executed = true
-//    }
-//
-//    try await Task.sleep(for: .milliseconds(100))
-//    #expect(executed == true)
-//  }
+  @Test
+  func `execute sync throws error from non-async context`() {
+    #expect(throws: ScriptEvaluationError.self) {
+      _ = try runtime.execute {
+        try self.runtime.eval("1 + *")
+      }
+    }
+  }
 
-//  @Test
-//  func `execute sync returns value from non-async context`() throws {
-//    let result = try runtime.execute {
-//      #expect(self.runtime.isOnJavaScriptThread())
-//      return 42
-//    }
-//    #expect(result == 42)
-//  }
+  @Test
+  func `execute async returns value`() async throws {
+    let result: String = try await runtime.execute {
+      await Task.yield()
+      return "hello"
+    }
+    #expect(result == "hello")
+  }
 
-//  @Test
-//  func `execute sync evaluates JavaScript from non-async context`() throws {
-//    let result = try runtime.execute {
-//      try self.runtime.eval("2 + 2").getInt()
-//    }
-//    #expect(result == 4)
-//  }
+  @Test
+  func `execute async awaits JavaScript evaluation`() async throws {
+    let result = try await runtime.execute {
+      try await self.runtime.evalAsync("Promise.resolve('async result')").getString()
+    }
+    #expect(result == "async result")
+  }
 
-//  @Test
-//  func `execute sync throws error from non-async context`() {
-//    #expect(throws: ScriptEvaluationError.self) {
-//      _ = try runtime.execute {
-//        try self.runtime.eval("1 + *")
-//      }
-//    }
-//  }
+  @Test
+  func `execute async throws error`() async {
+    await #expect(throws: ScriptEvaluationError.self) {
+      _ = try await runtime.execute {
+        await Task.yield()
+        try self.runtime.eval("invalid syntax +++")
+      }
+    }
+  }
 
-//  @Test
-//  func `execute async returns value`() async throws {
-//    let result: String = try await runtime.execute {
-//      await Task.yield()
-//      #expect(self.runtime.isOnJavaScriptThread())
-//      return "hello"
-//    }
-//    #expect(result == "hello")
-//  }
-
-//  @Test
-//  func `execute async awaits JavaScript evaluation`() async throws {
-//    let result = try await runtime.execute {
-//      try await self.runtime.evalAsync("Promise.resolve('async result')").getString()
-//    }
-//    #expect(result == "async result")
-//  }
-
-//  @Test
-//  func `execute async throws error`() async {
-//    await #expect(throws: ScriptEvaluationError.self) {
-//      _ = try await runtime.execute {
-//        await Task.yield()
-//        try self.runtime.eval("invalid syntax +++")
-//      }
-//    }
-//  }
-
-//  @Test
-//  func `execute async with complex operations`() async throws {
-//    let result = try await runtime.execute {
-//      await Task.yield()
-//      let obj = self.runtime.createObject()
-//      obj.setProperty("value", 100)
-//      return obj.getProperty("value").getInt()
-//    }
-//    #expect(result == 100)
-//  }
+  @Test
+  func `execute async with operations`() async throws {
+    let result = try await runtime.execute {
+      await Task.yield()
+      let obj = self.runtime.createObject()
+      obj.setProperty("value", 100)
+      return obj.getProperty("value").getInt()
+    }
+    #expect(result == 100)
+  }
 }
