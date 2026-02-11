@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <swift/bridging>
 
 namespace expo {
@@ -11,7 +12,7 @@ public:
 
   explicit RetainedSwiftPointer(Context context, Deallocator deallocator) : _context(context), _deallocator(std::move(deallocator)) {}
 
-  virtual ~RetainedSwiftPointer() = 0;
+  virtual ~RetainedSwiftPointer() = default;
 
 protected:
   Context _context;

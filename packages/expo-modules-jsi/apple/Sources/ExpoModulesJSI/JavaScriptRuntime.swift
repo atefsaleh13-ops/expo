@@ -5,6 +5,21 @@ import Foundation
 internal import jsi
 internal import ExpoModulesJSI_Cxx
 
+/**
+ A Swift wrapper around a JavaScript runtime. Provides access to a JavaScript execution environment, allowing you to evaluate
+ JavaScript code, create and manipulate JavaScript objects, functions, and values, and bridge between Swift and JavaScript.
+
+ ## Threading
+
+ JavaScript runtimes are single-threaded. All operations must be performed on the JavaScript
+ thread. Use `schedule()` or `execute()` methods to safely run code on the correct thread.
+ The runtime uses `@JavaScriptActor` to enforce thread safety at compile time.
+
+ ## Lifecycle
+
+ The runtime maintains a weak reference pattern for values, objects, and arrays to prevent
+ retain cycles. Ensure the runtime remains alive while any derived JavaScript objects are in use.
+ */
 open class JavaScriptRuntime: Equatable, @unchecked Sendable {
   /**
    The underlying JSI runtime this `JavaScriptRuntime` points to.
@@ -204,7 +219,7 @@ open class JavaScriptRuntime: Equatable, @unchecked Sendable {
       let argumentsRef = arguments.copy().ref()
 
       // Switch to asynchronous context.
-      self.execute(taskName: "[JS] Async function \(name)") {
+      self.schedule(taskName: "[JS] Async function \(name)") {
         // Invoke the asynchronous function and resolve/reject the promise.
         do {
           let result = try await function(thisRef.take(), argumentsRef.take())
@@ -233,7 +248,7 @@ open class JavaScriptRuntime: Equatable, @unchecked Sendable {
 
   public func schedule(
     priority: SchedulerPriority = .normal,
-    taskName: String? = "[JS] scheduled execution (\(#function))",
+    taskName: String? = "[JS] runtime.schedule (\(#function))",
     @_implicitSelfCapture _ closure: @escaping @JavaScriptActor () async throws -> Void
   ) -> Void {
     schedule(priority: priority) {
@@ -243,23 +258,76 @@ open class JavaScriptRuntime: Equatable, @unchecked Sendable {
     }
   }
 
-  public func execute(@_implicitSelfCapture _ closure: @escaping @JavaScriptActor () -> Void) {
+  /**
+   Synchronously executes a closure on the JavaScript runtime thread, blocking the current thread until completion.
+   Not available in async contexts to prevent blocking the cooperative thread pool.
+   */
+  @available(*, noasync)
+  public func execute<R: Sendable>(@_implicitSelfCapture _ closure: @escaping @JavaScriptActor () throws -> R) throws -> sending R {
+    var result: Result<R, any Error>!
+
     scheduler.scheduleTask(.ImmediatePriority) {
-      JavaScriptActor.assumeIsolated(closure)
+      do {
+        result = .success(try JavaScriptActor.assumeIsolated(closure))
+      } catch {
+        result = .failure(error)
+      }
     }
+
+    // Use RunLoop to wait for the task to finish. As opposed to DispatchSemaphore or DispatchGroup,
+    // this solution lets the current run loop to process other events in the meantime.
+    while result == nil {
+      RunLoop.current.run(mode: .common, before: Date())
+    }
+    return try result.get()
   }
 
-  public func execute<R: Sendable>(@_implicitSelfCapture _ closure: sending @escaping @JavaScriptActor () async throws -> R) async throws -> sending R {
-    return try await runtimeActor.execute(closure)
-  }
-
+  /**
+   Synchronously executes an async closure on the JavaScript runtime thread, blocking the current thread until completion.
+   Not available in async contexts to prevent blocking the cooperative thread pool.
+   */
+  @available(*, noasync)
   public func execute<R: Sendable>(
-    taskName: String? = "[JS]: async execution \(#function)",
-    @_implicitSelfCapture _ closure: sending @escaping @JavaScriptActor () async throws -> R
-  ) -> Void {
-    Task.immediate_polyfill(name: taskName) {
-      // Just call the closure straight away if we are on the right thread.
-      try await runtimeActor.execute(closure)
+    taskName: String? = "[JS] runtime.execute (\(#function))",
+    @_implicitSelfCapture _ closure: @escaping @JavaScriptActor () async throws -> R
+  ) throws -> sending R {
+    let result = NonisolatedUnsafeVar<Result<R, any Error>>()
+
+    scheduler.scheduleTask(.ImmediatePriority) {
+      Task.immediate_polyfill(name: taskName, priority: .high) {
+        do {
+          result.value = .success(try await closure())
+        } catch {
+          result.value = .failure(error)
+        }
+      }
+    }
+
+    // Use RunLoop to wait for the task to finish. As opposed to DispatchSemaphore or DispatchGroup,
+    // this solution lets the current run loop to process other events in the meantime.
+    while result.value == nil {
+      RunLoop.current.run(mode: .common, before: Date())
+    }
+    return try result.value.get()
+  }
+
+  /**
+   Asynchronously executes a closure on the JavaScript runtime thread, awaiting its completion without blocking.
+   */
+  public func execute<R: Sendable>(
+    taskName: String? = "[JS] runtime.execute (async \(#function))",
+    @_implicitSelfCapture _ closure: @escaping @JavaScriptActor () async throws -> R
+  ) async throws -> sending R {
+    return try await withUnsafeThrowingContinuation { continuation in
+      scheduler.scheduleTask(.ImmediatePriority) {
+        Task.immediate_polyfill(name: taskName, priority: .high) { @JavaScriptActor in
+          do {
+            continuation.resume(returning: try await closure())
+          } catch {
+            continuation.resume(throwing: error)
+          }
+        }
+      }
     }
   }
 

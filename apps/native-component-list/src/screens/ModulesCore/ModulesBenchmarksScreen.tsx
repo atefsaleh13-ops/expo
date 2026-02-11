@@ -1,12 +1,13 @@
+import { Code } from '@expo/html-elements';
 import { useTheme } from 'ThemeProvider';
 import { TurboModule, ExpoModule, BridgeModule } from 'benchmarking';
 import { useCallback, useState } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type BenchmarkResult = {
-  expoTime: number;
-  turboTime: number;
-  bridgeTime: number;
+  expoTime: number | null;
+  turboTime: number | null;
+  bridgeTime: number | null;
 };
 
 const runs = 100_000;
@@ -99,15 +100,15 @@ function runNumberBenchmark(): BenchmarkResult {
 async function runAsyncNumberBenchmark(): Promise<BenchmarkResult> {
   let expoTime = 0;
   {
-    await ExpoModule.concurrentAddNumbers(21, 37);
+    await ExpoModule.asyncAddNumbers(21, 37);
 
     const start = performance.now();
     for (let i = 0; i < runs; i++) {
-      await ExpoModule.concurrentAddNumbers(21, 37);
+      await ExpoModule.asyncAddNumbers(21, 37);
     }
     const end = performance.now();
     expoTime = end - start;
-    console.log(`ExpoModule took ${expoTime.toFixed(2)}ms to run nothing() ${runs}x!`);
+    console.log(`ExpoModule took ${expoTime.toFixed(2)}ms to run asyncAddNumbers() ${runs}x!`);
   }
 
   let turboTime = 0;
@@ -120,7 +121,7 @@ async function runAsyncNumberBenchmark(): Promise<BenchmarkResult> {
     }
     const end = performance.now();
     turboTime = end - start;
-    console.log(`TurboModule took ${turboTime.toFixed(2)}ms to run nothing() ${runs}x!`);
+    console.log(`TurboModule took ${turboTime.toFixed(2)}ms to run asyncAddNumbers() ${runs}x!`);
   }
 
   let bridgeTime = 0;
@@ -133,10 +134,26 @@ async function runAsyncNumberBenchmark(): Promise<BenchmarkResult> {
     }
     const end = performance.now();
     bridgeTime = end - start;
-    console.log(`BridgeModule took ${bridgeTime.toFixed(2)}ms to run nothing() ${runs}x!`);
+    console.log(`BridgeModule took ${bridgeTime.toFixed(2)}ms to run asyncAddNumbers() ${runs}x!`);
   }
 
   return { expoTime, turboTime, bridgeTime };
+}
+
+async function runConcurrentNumberBenchmark(): Promise<BenchmarkResult> {
+  let expoTime = 0;
+  {
+    await ExpoModule.concurrentAddNumbers(21, 37);
+
+    const start = performance.now();
+    for (let i = 0; i < runs; i++) {
+      await ExpoModule.concurrentAddNumbers(21, 37);
+    }
+    const end = performance.now();
+    expoTime = end - start;
+    console.log(`ExpoModule took ${expoTime.toFixed(2)}ms to run concurrentAddNumbers() ${runs}x!`);
+  }
+  return { expoTime, turboTime: 0, bridgeTime: 0 };
 }
 
 function runStringsBenchmark(): BenchmarkResult {
@@ -232,7 +249,7 @@ function BenchmarkResultContainer(props: { functionName: string; result: Benchma
   return (
     <View style={styles.benchmarkContainer}>
       <Text style={[styles.testHeader, { color: theme.text.default }]}>
-        Calling `{functionName}` 100.000 times
+        <Code>{functionName}</Code> 100.000 times
       </Text>
       <View style={styles.testResult}>
         <Text style={[styles.testResultText, { color: theme.text.default }]}>
@@ -255,6 +272,7 @@ export default function ModulesBenchmarksScreen() {
   const [voidTimes, setVoidTimes] = useState<BenchmarkResult | null>(null);
   const [numberTimes, setNumberTimes] = useState<BenchmarkResult | null>(null);
   const [asyncNumberTimes, setAsyncNumberTimes] = useState<BenchmarkResult | null>(null);
+  const [concurrentNumberTimes, setConcurrentNumberTimes] = useState<BenchmarkResult | null>(null);
   const [stringTimes, setStringTimes] = useState<BenchmarkResult | null>(null);
   const [arrayTimes, setArrayTimes] = useState<BenchmarkResult | null>(null);
 
@@ -263,28 +281,36 @@ export default function ModulesBenchmarksScreen() {
       setVoidTimes(runVoidBenchmark());
       setNumberTimes(runNumberBenchmark());
       setAsyncNumberTimes(await runAsyncNumberBenchmark());
+      setConcurrentNumberTimes(await runConcurrentNumberBenchmark());
       setStringTimes(runStringsBenchmark());
       setArrayTimes(runArrayBenchmark());
     })();
   }, []);
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background.screen }]}>
+    <ScrollView
+      style={{ backgroundColor: theme.background.screen }}
+      contentContainerStyle={[styles.container]}>
+      <Button title="Start" color={theme.text.link} onPress={startBenchmarks} />
+
       <BenchmarkResultContainer functionName="nothing" result={voidTimes} />
       <BenchmarkResultContainer functionName="addNumbers" result={numberTimes} />
       <BenchmarkResultContainer functionName="asyncAddNumbers" result={asyncNumberTimes} />
+      <BenchmarkResultContainer
+        functionName="concurrentAddNumbers"
+        result={concurrentNumberTimes}
+      />
       <BenchmarkResultContainer functionName="addStrings" result={stringTimes} />
       <BenchmarkResultContainer functionName="foldArray" result={arrayTimes} />
-
-      <Button title="Start" color={theme.text.link} onPress={startBenchmarks} />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 30,
+    paddingVertical: 20,
+    paddingHorizontal: 30,
     alignItems: 'center',
   },
   benchmarkContainer: {

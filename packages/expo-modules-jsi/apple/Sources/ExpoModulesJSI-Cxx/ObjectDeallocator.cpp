@@ -2,6 +2,7 @@
 
 #include "ObjectDeallocator.h"
 #include "JSIUtils.h"
+#include "NativeState.h"
 
 namespace expo::common {
 

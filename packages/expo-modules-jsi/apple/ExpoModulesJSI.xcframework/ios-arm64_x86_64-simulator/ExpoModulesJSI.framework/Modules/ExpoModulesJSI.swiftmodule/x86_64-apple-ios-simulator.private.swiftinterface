@@ -1,0 +1,503 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.2.4 (swiftlang-6.2.4.1.4 clang-1700.6.4.2)
+// swift-module-flags: -target x86_64-apple-ios16.4-simulator -enable-objc-interop -enable-library-evolution -swift-version 6 -enforce-exclusivity=checked -O -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-upcoming-feature InferIsolatedConformances -enable-experimental-feature DebugDescriptionMacro -module-name ExpoModulesJSI -package-name apple
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=swift-6 -interface-compiler-version 6.2.4
+import CoreGraphics
+import Foundation
+import Swift
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+public protocol JSRepresentable : Swift.Sendable, ~Copyable {
+  static func fromJSValue(_ value: ExpoModulesJSI.JavaScriptValue) -> Self
+  func toJSValue(in runtime: ExpoModulesJSI.JavaScriptRuntime) -> ExpoModulesJSI.JavaScriptValue
+}
+extension ExpoModulesJSI.JSRepresentable {
+  public static func fromJSValue(_ value: ExpoModulesJSI.JavaScriptValue) -> Self
+  public func toJSValue(in runtime: ExpoModulesJSI.JavaScriptRuntime) -> ExpoModulesJSI.JavaScriptValue
+}
+#if compiler(>=5.3) && $NonescapableTypes
+extension Swift.Optional : ExpoModulesJSI.JSRepresentable where Wrapped : ExpoModulesJSI.JSRepresentable {
+}
+#endif
+extension Swift.Dictionary : ExpoModulesJSI.JSRepresentable where Key == Swift.String, Value : ExpoModulesJSI.JSRepresentable {
+}
+extension Swift.Array : ExpoModulesJSI.JSRepresentable where Element : ExpoModulesJSI.JSRepresentable {
+}
+public struct JS {
+  public typealias Runtime = ExpoModulesJSI.JavaScriptRuntime
+  public typealias Value = ExpoModulesJSI.JavaScriptValue
+  public typealias Object = ExpoModulesJSI.JavaScriptObject
+  public typealias Function = ExpoModulesJSI.JavaScriptFunction
+  public static func runtimeLostFatalError() -> Swift.Never
+}
+@_hasMissingDesignatedInitializers @globalActor public actor JavaScriptActor : _Concurrency.GlobalActor {
+  public static let shared: ExpoModulesJSI.JavaScriptActor
+  nonisolated public var unownedExecutor: _Concurrency.UnownedSerialExecutor {
+    get
+  }
+  public static func assumeIsolated<T>(_ operation: @ExpoModulesJSI.JavaScriptActor @Sendable () throws -> T) rethrows -> T where T : ~Copyable
+  public static func checkIsolated()
+  public typealias ActorType = ExpoModulesJSI.JavaScriptActor
+  @objc deinit
+}
+public struct JavaScriptArray : ExpoModulesJSI.JavaScriptType, ~Swift.Copyable {
+  public var size: Swift.Int {
+    get
+  }
+  public func getValue(atIndex index: Swift.Int) throws -> ExpoModulesJSI.JavaScriptValue
+  public subscript(index: Swift.Int) -> ExpoModulesJSI.JavaScriptValue {
+    get throws
+  }
+  public func map<T>(_ transform: (_ value: ExpoModulesJSI.JavaScriptValue) throws -> T) rethrows -> [T]
+  public func asValue() -> ExpoModulesJSI.JavaScriptValue
+  public enum Errors : Swift.Error, Swift.Equatable, Swift.CustomStringConvertible {
+    case indexOutOfRange(index: Swift.Int, size: Swift.Int)
+    public var description: Swift.String {
+      get
+    }
+    public static func == (a: ExpoModulesJSI.JavaScriptArray.Errors, b: ExpoModulesJSI.JavaScriptArray.Errors) -> Swift.Bool
+  }
+}
+public struct JavaScriptError : ExpoModulesJSI.JavaScriptType, ~Swift.Copyable {
+  public init(_ runtime: ExpoModulesJSI.JavaScriptRuntime, message: Swift.String)
+  public func asValue() -> ExpoModulesJSI.JavaScriptValue
+}
+public struct ScriptEvaluationError : Swift.Error {
+}
+extension ExpoModulesJSI.JavaScriptError : ExpoModulesJSI.JSRepresentable {
+  public static func fromJSValue(_ value: ExpoModulesJSI.JavaScriptValue) -> ExpoModulesJSI.JavaScriptError
+  public func toJSValue(in runtime: ExpoModulesJSI.JavaScriptRuntime) -> ExpoModulesJSI.JavaScriptValue
+}
+extension __ObjC.expo.CppError : Swift.Error {
+  public var message: Swift.String {
+    get
+  }
+}
+public struct JavaScriptFunction : ExpoModulesJSI.JavaScriptType, ~Swift.Copyable {
+  #if compiler(>=5.3) && $NonescapableTypes
+  @discardableResult
+  public func call(this: borrowing ExpoModulesJSI.JavaScriptObject, arguments: consuming ExpoModulesJSI.JSValuesBuffer? = nil) throws -> ExpoModulesJSI.JavaScriptValue
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @discardableResult
+  public func call(arguments: consuming ExpoModulesJSI.JSValuesBuffer? = nil) throws -> ExpoModulesJSI.JavaScriptValue
+  #endif
+  @discardableResult
+  public func call<each T>(this: borrowing ExpoModulesJSI.JavaScriptObject, arguments: repeat each T) throws -> ExpoModulesJSI.JavaScriptValue where repeat each T : ExpoModulesJSI.JSRepresentable
+  @discardableResult
+  public func call<each T>(arguments: repeat each T) throws -> ExpoModulesJSI.JavaScriptValue where repeat each T : ExpoModulesJSI.JSRepresentable
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func callAsConstructor(_ arguments: consuming ExpoModulesJSI.JSValuesBuffer? = nil) throws -> ExpoModulesJSI.JavaScriptValue
+  #endif
+  public func callAsConstructor<each T>(_ arguments: repeat each T) throws -> ExpoModulesJSI.JavaScriptValue where repeat each T : ExpoModulesJSI.JSRepresentable
+  public func asValue() -> ExpoModulesJSI.JavaScriptValue
+  public func asObject() -> ExpoModulesJSI.JavaScriptObject
+}
+extension ExpoModulesJSI.JavaScriptFunction : ExpoModulesJSI.JSRepresentable {
+  public static func fromJSValue(_ value: ExpoModulesJSI.JavaScriptValue) -> ExpoModulesJSI.JavaScriptFunction
+  public func toJSValue(in runtime: ExpoModulesJSI.JavaScriptRuntime) -> ExpoModulesJSI.JavaScriptValue
+}
+public struct JavaScriptHostObject : ~Swift.Copyable {
+  public typealias GetClosure = (_ propertyName: Swift.String) -> ExpoModulesJSI.JavaScriptValue
+  public typealias SetClosure = (_ propertyName: Swift.String, _ value: ExpoModulesJSI.JavaScriptValue) -> Swift.Void
+  public typealias GetPropertyNamesClosure = () -> [Swift.String]
+  public typealias DeallocClosure = () -> Swift.Void
+}
+public struct JavaScriptObject : ExpoModulesJSI.JavaScriptType, Swift.Sendable, ~Swift.Copyable {
+  public init(_ runtime: ExpoModulesJSI.JavaScriptRuntime)
+  public init<DictValue>(_ runtime: ExpoModulesJSI.JavaScriptRuntime, _ dictionary: [Swift.String : DictValue]) where DictValue : ExpoModulesJSI.JSRepresentable
+  public func instanceOf(_ constructor: borrowing ExpoModulesJSI.JavaScriptFunction) -> Swift.Bool
+  public func instanceOf(_ constructor: ExpoModulesJSI.JavaScriptValue) -> Swift.Bool
+  public func isArray() -> Swift.Bool
+  public func isFunction() -> Swift.Bool
+  public func isArrayBuffer() -> Swift.Bool
+  public func getArray() -> ExpoModulesJSI.JavaScriptArray
+  public func hasProperty(_ name: Swift.String) -> Swift.Bool
+  public func getProperty(_ name: Swift.String) -> ExpoModulesJSI.JavaScriptValue
+  public subscript(key: Swift.String, nestedKeys: Swift.String...) -> ExpoModulesJSI.JavaScriptValue {
+    get
+  }
+  public func getPropertyNames() -> [Swift.String]
+  public func getPropertyAsObject(_ name: Swift.String) -> ExpoModulesJSI.JavaScriptObject
+  public func getPropertyAsFunction(_ name: Swift.String) -> ExpoModulesJSI.JavaScriptFunction
+  public func getPrototype() -> ExpoModulesJSI.JavaScriptValue
+  public func setPrototype(_ prototype: ExpoModulesJSI.JavaScriptValue)
+  public func setProperty(_ name: Swift.String, _ bool: Swift.Bool)
+  public func setProperty(_ name: Swift.String, _ double: Swift.Double)
+  public func setProperty(_ name: Swift.String, value: ExpoModulesJSI.JavaScriptValue)
+  public func setProperty<T>(_ name: Swift.String, value: consuming T) where T : ExpoModulesJSI.JSRepresentable, T : ~Copyable
+  public func setProperty(_ name: Swift.String, _ object: consuming ExpoModulesJSI.JavaScriptObject)
+  public func deleteProperty(_ name: Swift.String)
+  public func defineProperty(_ name: Swift.String, descriptor: consuming ExpoModulesJSI.JavaScriptObject)
+  public func defineProperty(_ name: Swift.String, descriptor: consuming ExpoModulesJSI.JavaScriptObject.PropertyDescriptor = .init())
+  public func defineProperty<T>(_ name: Swift.String, value: borrowing T, options: ExpoModulesJSI.JavaScriptObject.PropertyOptions = []) where T : ExpoModulesJSI.JSRepresentable, T : ~Copyable
+  @discardableResult
+  @ExpoModulesJSI.JavaScriptActor public func callFunction<each T>(_ functionName: Swift.String, arguments: repeat each T) throws -> ExpoModulesJSI.JavaScriptValue where repeat each T : ExpoModulesJSI.JSRepresentable
+  public func asValue() -> ExpoModulesJSI.JavaScriptValue
+  public func createWeak() -> ExpoModulesJSI.JavaScriptWeakObject
+  public func hasNativeState() -> Swift.Bool
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func getNativeState<T>(as: T.Type = NativeState.self) -> T? where T : ExpoModulesJSI.NativeState
+  #endif
+  public func setNativeState<T>(_ nativeState: T) where T : ExpoModulesJSI.NativeState
+  public func unsetNativeState()
+  public func setObjectDeallocator(_ deallocator: @escaping () -> Swift.Void)
+  public func setExternalMemoryPressure(_ size: Swift.Int)
+  public struct PropertyOptions : Swift.OptionSet, Swift.Sendable {
+    public let rawValue: Swift.Int
+    public init(rawValue: Swift.Int)
+    public static let configurable: ExpoModulesJSI.JavaScriptObject.PropertyOptions
+    public static let enumerable: ExpoModulesJSI.JavaScriptObject.PropertyOptions
+    public static let writable: ExpoModulesJSI.JavaScriptObject.PropertyOptions
+    public typealias ArrayLiteralElement = ExpoModulesJSI.JavaScriptObject.PropertyOptions
+    public typealias Element = ExpoModulesJSI.JavaScriptObject.PropertyOptions
+    public typealias RawValue = Swift.Int
+  }
+  public struct PropertyDescriptor : ~Swift.Copyable {
+    #if compiler(>=5.3) && $NonescapableTypes
+    public init(configurable: Swift.Bool = false, enumerable: Swift.Bool = false, writable: Swift.Bool = false, value: ExpoModulesJSI.JavaScriptValue? = nil)
+    #endif
+    public consuming func toObject(_ runtime: borrowing ExpoModulesJSI.JavaScriptRuntime) -> ExpoModulesJSI.JavaScriptObject
+  }
+}
+extension ExpoModulesJSI.JavaScriptObject : ExpoModulesJSI.JSRepresentable {
+  public static func fromJSValue(_ value: ExpoModulesJSI.JavaScriptValue) -> ExpoModulesJSI.JavaScriptObject
+  public func toJSValue(in runtime: ExpoModulesJSI.JavaScriptRuntime) -> ExpoModulesJSI.JavaScriptValue
+}
+public struct JavaScriptPromise : ExpoModulesJSI.JavaScriptType, ~Swift.Copyable {
+  @ExpoModulesJSI.JavaScriptActor public init(_ runtime: ExpoModulesJSI.JavaScriptRuntime, _ object: consuming ExpoModulesJSI.JavaScriptObject)
+  @ExpoModulesJSI.JavaScriptActor public init(_ runtime: ExpoModulesJSI.JavaScriptRuntime)
+  public var isDeferred: Swift.Bool {
+    get
+  }
+  @ExpoModulesJSI.JavaScriptActor public func await() async throws -> ExpoModulesJSI.JavaScriptValue
+  public func asValue() -> ExpoModulesJSI.JavaScriptValue
+  public func resolve(_ result: ExpoModulesJSI.JavaScriptValue)
+  public func reject(_ error: any Swift.Error)
+}
+final public class JavaScriptRef<T> : ExpoModulesJSI.JavaScriptType, Swift.Sendable, Swift.Copyable, Swift.Escapable where T : ExpoModulesJSI.JavaScriptType, T : ~Copyable {
+  final public var isEmpty: Swift.Bool {
+    get
+  }
+  public init()
+  #if compiler(>=5.3) && $SendingArgsAndResults
+  public init(_ value: consuming sending T)
+  #else
+  public init(_ value: consuming T)
+  #endif
+  #if compiler(>=5.3) && $SendingArgsAndResults
+  final public func reset(_ value: consuming sending T)
+  #else
+  final public func reset(_ value: consuming T)
+  #endif
+  final public func release()
+  #if compiler(>=5.3) && $SendingArgsAndResults
+  final public func take() throws -> sending T
+  #else
+  final public func take() throws -> T
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  #if compiler(>=5.3) && $SendingArgsAndResults
+  final public func take() -> sending T?
+  #else
+  final public func take() -> T?
+  #endif
+  #endif
+  final public func asValue() -> ExpoModulesJSI.JavaScriptValue
+  @objc deinit
+}
+extension ExpoModulesJSI.JavaScriptRef : ExpoModulesJSI.JSRepresentable where T : ExpoModulesJSI.JSRepresentable, T : ~Copyable {
+}
+@_hasMissingDesignatedInitializers open class JavaScriptRuntime : Swift.Equatable, @unchecked Swift.Sendable {
+  public init(provider: any ExpoModulesJSI.JavaScriptRuntimeProvider)
+  public init()
+  @_spi(Unsafe) public var unsafe_pointee: Swift.UnsafeMutableRawPointer {
+    @_spi(Unsafe) get
+  }
+  public func global() -> ExpoModulesJSI.JavaScriptObject
+  public func createObject() -> ExpoModulesJSI.JavaScriptObject
+  public func createObject(prototype: borrowing ExpoModulesJSI.JavaScriptObject) -> ExpoModulesJSI.JavaScriptObject
+  public func createHostObject(get: @escaping (_ propertyName: Swift.String) -> ExpoModulesJSI.JavaScriptValue, set: @escaping (_ propertyName: Swift.String, _ value: ExpoModulesJSI.JavaScriptValue) -> Swift.Void, getPropertyNames: @escaping () -> [Swift.String], dealloc: @escaping () -> Swift.Void) -> ExpoModulesJSI.JavaScriptObject
+  public typealias SyncFunctionClosure = @ExpoModulesJSI.JavaScriptActor @Sendable (_ this: ExpoModulesJSI.JavaScriptValue, _ arguments: consuming ExpoModulesJSI.JSValuesBuffer) throws -> ExpoModulesJSI.JavaScriptValue
+  #if compiler(>=5.3) && $NonescapableTypes
+  @ExpoModulesJSI.JavaScriptActor public func createClass(name: Swift.String, inheriting baseClass: consuming ExpoModulesJSI.JavaScriptFunction? = nil, _ constructor: @escaping ExpoModulesJSI.JavaScriptRuntime.SyncFunctionClosure) throws -> ExpoModulesJSI.JavaScriptFunction
+  #endif
+  #if compiler(>=5.3) && $SendingArgsAndResults
+  @ExpoModulesJSI.JavaScriptActor public func createSyncFunction(_ name: Swift.String, _ function: sending @escaping ExpoModulesJSI.JavaScriptRuntime.SyncFunctionClosure) -> ExpoModulesJSI.JavaScriptFunction
+  #else
+  @ExpoModulesJSI.JavaScriptActor public func createSyncFunction(_ name: Swift.String, _ function: __owned @escaping ExpoModulesJSI.JavaScriptRuntime.SyncFunctionClosure) -> ExpoModulesJSI.JavaScriptFunction
+  #endif
+  public typealias AsyncFunctionClosure = @ExpoModulesJSI.JavaScriptActor @Sendable (_ this: ExpoModulesJSI.JavaScriptValue, _ arguments: consuming ExpoModulesJSI.JSValuesBuffer) async throws -> ExpoModulesJSI.JavaScriptValue
+  #if compiler(>=5.3) && $SendingArgsAndResults
+  @ExpoModulesJSI.JavaScriptActor public func createAsyncFunction(_ name: Swift.String, _ function: sending @escaping ExpoModulesJSI.JavaScriptRuntime.AsyncFunctionClosure) -> ExpoModulesJSI.JavaScriptFunction
+  #else
+  @ExpoModulesJSI.JavaScriptActor public func createAsyncFunction(_ name: Swift.String, _ function: __owned @escaping ExpoModulesJSI.JavaScriptRuntime.AsyncFunctionClosure) -> ExpoModulesJSI.JavaScriptFunction
+  #endif
+  #if compiler(>=5.3) && $SendingArgsAndResults
+  public func schedule(priority: ExpoModulesJSI.JavaScriptRuntime.SchedulerPriority = .normal, @_implicitSelfCapture _ closure: @escaping @ExpoModulesJSI.JavaScriptActor @Sendable () -> sending Swift.Void)
+  #else
+  public func schedule(priority: ExpoModulesJSI.JavaScriptRuntime.SchedulerPriority = .normal, @_implicitSelfCapture _ closure: @escaping @ExpoModulesJSI.JavaScriptActor @Sendable () -> Swift.Void)
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func schedule(priority: ExpoModulesJSI.JavaScriptRuntime.SchedulerPriority = .normal, taskName: Swift.String? = "[JS] runtime.schedule (\(#function))", @_implicitSelfCapture _ closure: @escaping @ExpoModulesJSI.JavaScriptActor @Sendable () async throws -> Swift.Void)
+  #endif
+  #if compiler(>=5.3) && $SendingArgsAndResults
+  @available(*, noasync)
+  public func execute<R>(@_implicitSelfCapture _ closure: @escaping @ExpoModulesJSI.JavaScriptActor @Sendable () throws -> R) throws -> sending R where R : Swift.Sendable
+  #else
+  @available(*, noasync)
+  public func execute<R>(@_implicitSelfCapture _ closure: @escaping @ExpoModulesJSI.JavaScriptActor @Sendable () throws -> R) throws -> R where R : Swift.Sendable
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  #if compiler(>=5.3) && $SendingArgsAndResults
+  @available(*, noasync)
+  public func execute<R>(taskName: Swift.String? = "[JS] runtime.execute (\(#function))", @_implicitSelfCapture _ closure: @escaping @ExpoModulesJSI.JavaScriptActor @Sendable () async throws -> R) throws -> sending R where R : Swift.Sendable
+  #else
+  @available(*, noasync)
+  public func execute<R>(taskName: Swift.String? = "[JS] runtime.execute (\(#function))", @_implicitSelfCapture _ closure: @escaping @ExpoModulesJSI.JavaScriptActor @Sendable () async throws -> R) throws -> R where R : Swift.Sendable
+  #endif
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes && $AsyncExecutionBehaviorAttributes
+  #if compiler(>=5.3) && $SendingArgsAndResults
+  nonisolated(nonsending) public func execute<R>(taskName: Swift.String? = "[JS] runtime.execute (async \(#function))", @_implicitSelfCapture _ closure: @escaping @ExpoModulesJSI.JavaScriptActor @Sendable () async throws -> R) async throws -> sending R where R : Swift.Sendable
+  #else
+  nonisolated(nonsending) public func execute<R>(taskName: Swift.String? = "[JS] runtime.execute (async \(#function))", @_implicitSelfCapture _ closure: @escaping @ExpoModulesJSI.JavaScriptActor @Sendable () async throws -> R) async throws -> R where R : Swift.Sendable
+  #endif
+  #endif
+  public func isOnJavaScriptThread() -> Swift.Bool
+  public func assertThread(file: Swift.String = #file, function: Swift.String = #function, line: Swift.Int = #line)
+  public enum SchedulerPriority : Swift.Int32 {
+    case immediate
+    case userBlocking
+    case normal
+    case low
+    case idle
+    #if compiler(>=5.3) && $NonescapableTypes
+    public init?(rawValue: Swift.Int32)
+    #endif
+    public typealias RawValue = Swift.Int32
+    public var rawValue: Swift.Int32 {
+      get
+    }
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @discardableResult
+  @ExpoModulesJSI.JavaScriptActor public func eval(label: Swift.String? = nil, _ source: Swift.String) throws -> ExpoModulesJSI.JavaScriptValue
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @available(*, deprecated, message: "Spread the array into arguments instead")
+  @discardableResult
+  @ExpoModulesJSI.JavaScriptActor public func eval(label: Swift.String? = nil, _ lines: [Swift.String]) throws -> ExpoModulesJSI.JavaScriptValue
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @discardableResult
+  @ExpoModulesJSI.JavaScriptActor public func eval(label: Swift.String? = nil, _ lines: Swift.String...) throws -> ExpoModulesJSI.JavaScriptValue
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @discardableResult
+  @ExpoModulesJSI.JavaScriptActor public func evalAsync(label: Swift.String? = nil, _ source: Swift.String) async throws -> ExpoModulesJSI.JavaScriptValue
+  #endif
+  public static func == (lhs: ExpoModulesJSI.JavaScriptRuntime, rhs: ExpoModulesJSI.JavaScriptRuntime) -> Swift.Bool
+  @objc deinit
+}
+@objc(JavaScriptRuntimeProvider) public protocol JavaScriptRuntimeProvider {
+  @objc func consume() -> __ObjC.facebook.jsi.Runtime
+}
+public protocol JavaScriptType : Swift.Sendable, ~Copyable {
+  associatedtype Ref
+  func asValue() -> ExpoModulesJSI.JavaScriptValue
+  consuming func ref() -> ExpoModulesJSI.JavaScriptRef<Self>
+  borrowing func refToValue() -> ExpoModulesJSI.JavaScriptValue.Ref
+}
+extension ExpoModulesJSI.JavaScriptType where Self : ~Copyable {
+  public typealias Ref = ExpoModulesJSI.JavaScriptRef<Self>
+  public consuming func ref() -> ExpoModulesJSI.JavaScriptRef<Self>
+  public borrowing func refToValue() -> ExpoModulesJSI.JavaScriptValue.Ref
+}
+public struct JavaScriptTypedArray : ~Swift.Copyable {
+  public let kind: ExpoModulesJSI.JavaScriptTypedArray.Kind
+  public func getUnsafeMutableRawPointer() -> Swift.UnsafeMutableRawPointer
+  public enum Kind : Swift.Int {
+    case Int8Array
+    case Int16Array
+    case Int32Array
+    case Uint8Array
+    case Uint8ClampedArray
+    case Uint16Array
+    case Uint32Array
+    case Float32Array
+    case Float64Array
+    case BigInt64Array
+    case BigUint64Array
+    #if compiler(>=5.3) && $NonescapableTypes
+    public init?(rawValue: Swift.Int)
+    #endif
+    public typealias RawValue = Swift.Int
+    public var rawValue: Swift.Int {
+      get
+    }
+  }
+  public let byteLength: Swift.Int
+  public let byteOffset: Swift.Int
+  public let length: Swift.Int
+  public func getProperty(_ name: Swift.String) -> ExpoModulesJSI.JavaScriptValue
+}
+@_hasMissingDesignatedInitializers final public class JavaScriptValue : ExpoModulesJSI.JavaScriptType, Swift.Escapable {
+  public init(_ runtime: ExpoModulesJSI.JavaScriptRuntime, _ bool: Swift.Bool)
+  public init(_ runtime: ExpoModulesJSI.JavaScriptRuntime, _ value: any ExpoModulesJSI.JSRepresentable)
+  final public func copy() -> ExpoModulesJSI.JavaScriptValue
+  final public func isUndefined() -> Swift.Bool
+  final public func isNull() -> Swift.Bool
+  final public func isBool() -> Swift.Bool
+  final public func isNumber() -> Swift.Bool
+  final public func isString() -> Swift.Bool
+  final public func isSymbol() -> Swift.Bool
+  final public func isObject() -> Swift.Bool
+  final public func isArray() -> Swift.Bool
+  final public func isFunction() -> Swift.Bool
+  final public func isTypedArray() -> Swift.Bool
+  final public func `is`(_ typeName: Swift.String) -> Swift.Bool
+  final public func getAny() -> Any
+  final public func getBool() -> Swift.Bool
+  final public func getInt() -> Swift.Int
+  final public func getDouble() -> Swift.Double
+  final public func getString() -> Swift.String
+  final public func getObject() -> ExpoModulesJSI.JavaScriptObject
+  final public func getFunction() -> ExpoModulesJSI.JavaScriptFunction
+  #if compiler(>=5.3) && $NonescapableTypes
+  final public func getTypedArray() -> ExpoModulesJSI.JavaScriptTypedArray?
+  #endif
+  final public func toString() -> Swift.String
+  #if compiler(>=5.3) && $NonescapableTypes
+  final public func jsonStringify(replacer: ExpoModulesJSI.JavaScriptValue? = nil, space: ExpoModulesJSI.JavaScriptValue? = nil) throws -> Swift.String?
+  #endif
+  final public func asValue() -> ExpoModulesJSI.JavaScriptValue
+  public enum Kind : Swift.String {
+    case undefined
+    case null
+    case bool
+    case number
+    case symbol
+    case string
+    case function
+    case object
+    #if compiler(>=5.3) && $NonescapableTypes
+    public init?(rawValue: Swift.String)
+    #endif
+    public typealias RawValue = Swift.String
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+  final public var kind: ExpoModulesJSI.JavaScriptValue.Kind {
+    get
+  }
+  final public func isEqual(to another: ExpoModulesJSI.JavaScriptValue) -> Swift.Bool
+  public static func == (lhs: ExpoModulesJSI.JavaScriptValue, rhs: ExpoModulesJSI.JavaScriptValue) -> Swift.Bool
+  public static func != (lhs: ExpoModulesJSI.JavaScriptValue, rhs: ExpoModulesJSI.JavaScriptValue) -> Swift.Bool
+  public static func undefined() -> ExpoModulesJSI.JavaScriptValue
+  public static func null() -> ExpoModulesJSI.JavaScriptValue
+  public static func `true`() -> ExpoModulesJSI.JavaScriptValue
+  public static func `false`() -> ExpoModulesJSI.JavaScriptValue
+  public static func number(_ number: Swift.Double) -> ExpoModulesJSI.JavaScriptValue
+  public static func representing(value: any ExpoModulesJSI.JSRepresentable, in runtime: ExpoModulesJSI.JavaScriptRuntime) -> ExpoModulesJSI.JavaScriptValue
+  @available(*, deprecated, renamed: "representing(value:in:)")
+  public static func from(_ value: Any, runtime: ExpoModulesJSI.JavaScriptRuntime) -> ExpoModulesJSI.JavaScriptValue
+  @objc deinit
+}
+extension ExpoModulesJSI.JavaScriptValue : ExpoModulesJSI.JSRepresentable {
+  public static func fromJSValue(_ value: ExpoModulesJSI.JavaScriptValue) -> ExpoModulesJSI.JavaScriptValue
+  final public func toJSValue(in runtime: ExpoModulesJSI.JavaScriptRuntime) -> ExpoModulesJSI.JavaScriptValue
+}
+public struct JSValuesBuffer : ExpoModulesJSI.JavaScriptType, ~Swift.Copyable {
+  public var count: Swift.Int {
+    get
+  }
+  public subscript(index: Swift.Int) -> ExpoModulesJSI.JavaScriptValue {
+    get
+  }
+  @ExpoModulesJSI.JavaScriptActor public func map<T>(_ transform: @ExpoModulesJSI.JavaScriptActor @Sendable (_ value: ExpoModulesJSI.JavaScriptValue, _ index: Swift.Int) throws -> T) rethrows -> [T]
+  @ExpoModulesJSI.JavaScriptActor public func copy() -> ExpoModulesJSI.JSValuesBuffer
+  public func asValue() -> ExpoModulesJSI.JavaScriptValue
+  public static func allocate(in runtime: ExpoModulesJSI.JavaScriptRuntime, capacity: Swift.Int) -> ExpoModulesJSI.JSValuesBuffer
+  public static func allocate<each T>(in runtime: ExpoModulesJSI.JavaScriptRuntime, with values: repeat each T) -> ExpoModulesJSI.JSValuesBuffer where repeat each T : ExpoModulesJSI.JSRepresentable
+  public static func allocate<RefType>(in runtime: ExpoModulesJSI.JavaScriptRuntime, refs: [ExpoModulesJSI.JavaScriptRef<RefType>]) -> ExpoModulesJSI.JSValuesBuffer where RefType : ExpoModulesJSI.JSRepresentable, RefType : ExpoModulesJSI.JavaScriptType, RefType : ~Copyable
+}
+public struct JavaScriptWeakObject : ExpoModulesJSI.JavaScriptType, ~Swift.Copyable {
+  public init(_ runtime: ExpoModulesJSI.JavaScriptRuntime, _ object: borrowing ExpoModulesJSI.JavaScriptObject)
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func lock() -> ExpoModulesJSI.JavaScriptObject?
+  #endif
+  public func asValue() -> ExpoModulesJSI.JavaScriptValue
+}
+open class NativeState {
+  public init()
+  public var isReleased: Swift.Bool {
+    get
+  }
+  @objc deinit
+}
+extension _Concurrency.Task where Failure == any Swift.Error {
+  #if compiler(>=5.3) && $IsolatedAny && $NonescapableTypes
+  #if compiler(>=5.3) && $SendingArgsAndResults
+  @discardableResult
+  public static func immediate_polyfill(name: Swift.String? = nil, priority: _Concurrency.TaskPriority? = nil, @_inheritActorContext @_implicitSelfCapture operation: sending @escaping @isolated(any) () async throws -> Success) -> _Concurrency.Task<Success, any Swift.Error>
+  #else
+  @discardableResult
+  public static func immediate_polyfill(name: Swift.String? = nil, priority: _Concurrency.TaskPriority? = nil, @_inheritActorContext @_implicitSelfCapture operation: __owned @escaping @isolated(any) () async throws -> Success) -> _Concurrency.Task<Success, any Swift.Error>
+  #endif
+  #endif
+}
+extension Swift.Bool : ExpoModulesJSI.JSRepresentable {}
+extension Swift.Int : ExpoModulesJSI.JSRepresentable {}
+extension Swift.Int8 : ExpoModulesJSI.JSRepresentable {}
+extension Swift.Int16 : ExpoModulesJSI.JSRepresentable {}
+extension Swift.Int32 : ExpoModulesJSI.JSRepresentable {}
+extension Swift.Int64 : ExpoModulesJSI.JSRepresentable {}
+extension Swift.UInt : ExpoModulesJSI.JSRepresentable {}
+extension Swift.UInt8 : ExpoModulesJSI.JSRepresentable {}
+extension Swift.UInt16 : ExpoModulesJSI.JSRepresentable {}
+extension Swift.UInt32 : ExpoModulesJSI.JSRepresentable {}
+extension Swift.UInt64 : ExpoModulesJSI.JSRepresentable {}
+extension Swift.Float16 : ExpoModulesJSI.JSRepresentable {}
+extension Swift.Float : ExpoModulesJSI.JSRepresentable {}
+extension Swift.Double : ExpoModulesJSI.JSRepresentable {}
+extension CoreFoundation.CGFloat : ExpoModulesJSI.JSRepresentable {}
+extension Swift.String : ExpoModulesJSI.JSRepresentable {}
+@_spi(_ConstraintThatIsNotPartOfTheAPIOfThisLibrary)
+@available(*, unavailable)
+extension Swift.Optional : Swift.Copyable where Wrapped : _ConstraintThatIsNotPartOfTheAPIOfThisLibrary {}
+@_spi(_ConstraintThatIsNotPartOfTheAPIOfThisLibrary)
+@available(*, unavailable)
+extension Swift.Optional :  where Wrapped : _ConstraintThatIsNotPartOfTheAPIOfThisLibrary {}
+@_spi(_ConstraintThatIsNotPartOfTheAPIOfThisLibrary)
+@available(*, unavailable)
+extension Swift.Dictionary : Swift.Copyable where Key : _ConstraintThatIsNotPartOfTheAPIOfThisLibrary {}
+@_spi(_ConstraintThatIsNotPartOfTheAPIOfThisLibrary)
+@available(*, unavailable)
+extension Swift.Dictionary :  where Key : _ConstraintThatIsNotPartOfTheAPIOfThisLibrary {}
+@_spi(_ConstraintThatIsNotPartOfTheAPIOfThisLibrary)
+@available(*, unavailable)
+extension Swift.Array : Swift.Copyable where Element : _ConstraintThatIsNotPartOfTheAPIOfThisLibrary {}
+@_spi(_ConstraintThatIsNotPartOfTheAPIOfThisLibrary)
+@available(*, unavailable)
+extension Swift.Array :  where Element : _ConstraintThatIsNotPartOfTheAPIOfThisLibrary {}
+@_spi(_ConstraintThatIsNotPartOfTheAPIOfThisLibrary)
+@available(*, unavailable)
+extension ExpoModulesJSI.JavaScriptRef : Swift.Copyable where T : _ConstraintThatIsNotPartOfTheAPIOfThisLibrary {}
+@_spi(_ConstraintThatIsNotPartOfTheAPIOfThisLibrary)
+@available(*, unavailable)
+extension ExpoModulesJSI.JavaScriptRef :  where T : _ConstraintThatIsNotPartOfTheAPIOfThisLibrary {}
+extension ExpoModulesJSI.JavaScriptRuntime.SchedulerPriority : Swift.Equatable {}
+extension ExpoModulesJSI.JavaScriptRuntime.SchedulerPriority : Swift.Hashable {}
+extension ExpoModulesJSI.JavaScriptRuntime.SchedulerPriority : Swift.RawRepresentable {}
+extension ExpoModulesJSI.JavaScriptTypedArray.Kind : Swift.Equatable {}
+extension ExpoModulesJSI.JavaScriptTypedArray.Kind : Swift.Hashable {}
+extension ExpoModulesJSI.JavaScriptTypedArray.Kind : Swift.RawRepresentable {}
+extension ExpoModulesJSI.JavaScriptValue.Kind : Swift.Equatable {}
+extension ExpoModulesJSI.JavaScriptValue.Kind : Swift.Hashable {}
+extension ExpoModulesJSI.JavaScriptValue.Kind : Swift.RawRepresentable {}
+
+@usableFromInline
+internal protocol _ConstraintThatIsNotPartOfTheAPIOfThisLibrary {}

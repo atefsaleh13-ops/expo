@@ -1,4 +1,0 @@
-module jsi {
-  header "jsi.h"
-  export *
-}

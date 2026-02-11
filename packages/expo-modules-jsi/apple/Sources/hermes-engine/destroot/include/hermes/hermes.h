@@ -15,9 +15,9 @@
 #include <ostream>
 #include <string>
 
-#include "Public/HermesExport.h"
-#include "hermes/Public/RuntimeConfig.h"
-#include "hermes/Public/SamplingProfiler.h"
+#include <hermes/Public/HermesExport.h>
+#include <hermes/Public/RuntimeConfig.h>
+#include <hermes/Public/SamplingProfiler.h>
 #include <jsi/hermes.h>
 #include <jsi/jsi.h>
 #include <unordered_map>

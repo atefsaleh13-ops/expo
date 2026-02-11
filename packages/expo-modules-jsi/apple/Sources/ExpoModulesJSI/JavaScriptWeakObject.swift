@@ -27,17 +27,18 @@ public struct JavaScriptWeakObject: JavaScriptType, ~Copyable {
   }
 
   /**
-   Returns a Value representing the underlying Object if it is still valid; otherwise returns `undefined`.
+   Returns the underlying `JavaScriptObject` if it is still valid; otherwise returns `nil`.
    Note that this method has nothing to do with threads or concurrency. The name is based on `std::weak_ptr::lock()` which serves a similar purpose.
    */
-  public func lock() -> JavaScriptValue {
+  public func lock() -> JavaScriptObject? {
     guard let runtime else {
       JS.runtimeLostFatalError()
     }
-    return JavaScriptValue(runtime, pointee.lock(runtime.pointee))
+    let jsiValue = pointee.lock(runtime.pointee)
+    return jsiValue.isObject() ? JavaScriptObject(runtime, jsiValue.getObject(runtime.pointee)) : nil
   }
 
   public func asValue() -> JavaScriptValue {
-    return lock().asValue()
+    return lock()?.asValue() ?? .undefined()
   }
 }

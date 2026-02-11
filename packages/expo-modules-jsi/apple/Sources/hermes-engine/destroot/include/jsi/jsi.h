@@ -8,14 +8,12 @@
 #pragma once
 
 #include <cassert>
-#include <cstdint>
 #include <cstring>
 #include <exception>
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
-#include <swift/bridging>
 
 #ifndef JSI_EXPORT
 #ifdef _MSC_VER
@@ -36,18 +34,18 @@ namespace jsi {
 /// UUID version 1 implementation. This should be constructed with constant
 /// arguments to identify fixed UUIDs.
 class JSI_EXPORT UUID {
-public:
+ public:
   // Construct from raw parts
   constexpr UUID(
-                 uint32_t timeLow,
-                 uint16_t timeMid,
-                 uint16_t timeHighAndVersion,
-                 uint16_t variantAndClockSeq,
-                 uint64_t node)
-  : high(
-         ((uint64_t)(timeLow) << 32) | ((uint64_t)(timeMid) << 16) |
-         ((uint64_t)(timeHighAndVersion))),
-  low(((uint64_t)(variantAndClockSeq) << 48) | node) {}
+      uint32_t timeLow,
+      uint16_t timeMid,
+      uint16_t timeHighAndVersion,
+      uint16_t variantAndClockSeq,
+      uint64_t node)
+      : high(
+            ((uint64_t)(timeLow) << 32) | ((uint64_t)(timeMid) << 16) |
+            ((uint64_t)(timeHighAndVersion))),
+        low(((uint64_t)(variantAndClockSeq) << 48) | node) {}
 
   // Default constructor (zero UUID)
   constexpr UUID() : high(0), low(0) {}
@@ -71,7 +69,7 @@ public:
   struct Hash {
     std::size_t operator()(const UUID& uuid) const noexcept {
       return std::hash<uint64_t>{}(uuid.high) ^
-      (std::hash<uint64_t>{}(uuid.low) << 1);
+          (std::hash<uint64_t>{}(uuid.low) << 1);
     }
   };
 
@@ -79,14 +77,14 @@ public:
   std::string toString() const {
     std::string buffer(36, ' ');
     std::snprintf(
-                  buffer.data(),
-                  buffer.size() + 1,
-                  "%08x-%04x-%04x-%04x-%012llx",
-                  getTimeLow(),
-                  getTimeMid(),
-                  getTimeHighAndVersion(),
-                  getVariantAndClockSeq(),
-                  (unsigned long long)getNode());
+        buffer.data(),
+        buffer.size() + 1,
+        "%08x-%04x-%04x-%04x-%012llx",
+        getTimeLow(),
+        getTimeMid(),
+        getTimeHighAndVersion(),
+        getVariantAndClockSeq(),
+        (unsigned long long)getNode());
     return buffer;
   }
 
@@ -110,7 +108,7 @@ public:
     return low & 0xFFFFFFFFFFFF;
   }
 
-private:
+ private:
   uint64_t high;
   uint64_t low;
 };
@@ -126,7 +124,7 @@ struct JSI_EXPORT ICast {
   /// does not need to be released when not needed.
   virtual ICast* castInterface(const UUID& interfaceUUID) = 0;
 
-protected:
+ protected:
   /// Interfaces are not destructible, thus the destructor is intentionally
   /// protected to prevent delete calls on the interface.
   /// Additionally, the destructor is non-virtual to reduce the vtable
@@ -139,14 +137,14 @@ protected:
 /// size(), data(), and the contents of the pointer returned by data() must not
 /// change after construction.
 class JSI_EXPORT Buffer {
-public:
+ public:
   virtual ~Buffer();
   virtual size_t size() const = 0;
   virtual const uint8_t* data() const = 0;
 };
 
 class JSI_EXPORT StringBuffer : public Buffer {
-public:
+ public:
   StringBuffer(std::string s) : s_(std::move(s)) {}
   size_t size() const override {
     return s_.size();
@@ -155,7 +153,7 @@ public:
     return reinterpret_cast<const uint8_t*>(s_.data());
   }
 
-private:
+ private:
   std::string s_;
 };
 
@@ -165,7 +163,7 @@ private:
 /// user must ensure that access to the contents of the buffer is properly
 /// synchronised.
 class JSI_EXPORT MutableBuffer {
-public:
+ public:
   virtual ~MutableBuffer();
   virtual size_t size() const = 0;
   virtual uint8_t* data() = 0;
@@ -176,10 +174,10 @@ public:
 /// jsi::Runtime::prepareJavaScript().
 /// ** This is an experimental API that is subject to change. **
 class JSI_EXPORT PreparedJavaScript {
-protected:
+ protected:
   PreparedJavaScript() = default;
 
-public:
+ public:
   virtual ~PreparedJavaScript() = 0;
 };
 
@@ -212,12 +210,12 @@ class JSError;
 /// can be any value - it will not necessarily be coerced to an object or
 /// or set to the global object.
 using HostFunctionType = std::function<
-Value(Runtime& rt, const Value& thisVal, const Value* args, size_t count)>;
+    Value(Runtime& rt, const Value& thisVal, const Value* args, size_t count)>;
 
 /// An object which implements this interface can be registered as an
 /// Object with the JS runtime.
 class JSI_EXPORT HostObject {
-public:
+ public:
   // The C++ object's dtor will be called when the GC finalizes this
   // object.  (This may be as late as when the Runtime is shut down.)
   // You have no control over which thread it is called on.  This will
@@ -250,81 +248,9 @@ public:
 /// Native state (and destructor) that can be attached to any JS object
 /// using setNativeState.
 class JSI_EXPORT NativeState {
-public:
+ public:
   virtual ~NativeState();
 };
-
-// JSI_UNSTABLE gates features that will be released with a Hermes version in
-// the future. Until released, these features may be subject to change. After
-// release, these features will be moved out of JSI_UNSTABLE and become frozen.
-#ifdef JSI_UNSTABLE
-/// Opaque class that is used to store serialized object from a runtime. The
-/// lifetime of this object is orthogonal to the original runtime object, and
-/// may outlive the original object.
-class JSI_EXPORT Serialized {
-public:
-  /// Uses \p secretAddr to validate if the Serialized data is supported. If so,
-  /// return the pointer to the underlying serialized data. Otherwise, return a
-  /// nullptr. This should be used by the runtime to deserialize the data.
-  virtual void* getPrivate(const void* secretAddr) = 0;
-  virtual ~Serialized();
-};
-
-/// Provides a set of APIs that allows copying objects between different
-/// runtime instances. The runtimes instances must be of the same type. As an
-/// example, a serialized object from Hermes runtime may only be deserialized by
-/// another Hermes runtime.
-class JSI_EXPORT ISerialization : public ICast {
-public:
-  static constexpr jsi::UUID uuid{
-    0xd40fe0ec,
-    0xa47c,
-    0x42c9,
-    0x8c09,
-    0x661aeab832d8};
-
-  /// Serializes the given Value \p value using the structured clone algorithm.
-  /// It returns a shared pointer of an opaque Serialized object that can be
-  /// deserialized multiple times. The lifetime of the Serialized object is not
-  /// tied to the lifetime of the original object.
-  virtual std::shared_ptr<Serialized> serialize(Value& value) = 0;
-
-  /// Given a Serialized object provided by \p serialized, deserialize it using
-  /// the structured clone algorithm into a JS value in the current runtime.
-  /// Returns the deserialized JS value.
-  virtual Value deserialize(const std::shared_ptr<Serialized>& serialized) = 0;
-
-  /// Serializes the given jsi::Value \p value using the structured clone
-  /// algorithm. \p transferList must be a JS Array. Given the length property
-  /// of \p transferList, this API will transfer everything at index [0, length
-  /// - 1] to the serialized object. The transferred values will no longer be
-  /// usable in the original runtime. It returns a unique pointer of an opaque
-  /// Serialized object that can be deserialized once only by
-  /// deserializeWithTransfer. The lifetime of the Serialized object is not tied
-  /// to the lifetime of the original object.
-  virtual std::unique_ptr<Serialized> serializeWithTransfer(
-                                                            Value& value,
-                                                            const Array& transferList) = 0;
-
-  /// Using the structure clone algorithm, deserialize the object provided by \p
-  /// serialized into a JS value in the current runtime. \p serialized must be
-  /// created by serializeWithTransfer. If the current runtime does not support
-  /// the serialization scheme in \p serialized, then this method will throw and
-  /// \p serialized will remain unmodified. Otherwise, this will consume the
-  /// serialized data entirely and make the serialized objects in the current
-  /// runtime. Any transferred values in the serialized object will be owned by
-  /// the current runtime.
-  //  This method returns an Array containing the deserialized values, where the
-  //  first element is the value passed into serializeWithTransfer,
-  /// followed by all transferred values.
-  virtual Array deserializeWithTransfer(
-                                        std::unique_ptr<Serialized>& serialized) = 0;
-
-protected:
-  ~ISerialization() = default;
-};
-
-#endif // JSI_UNSTABLE
 
 /// Represents a JS runtime.  Movable, but not copyable.  Note that
 /// this object may not be thread-aware, but cannot be used safely from
@@ -345,7 +271,7 @@ protected:
 /// is shut down.  If your lifecycle is such that avoiding this is hard,
 /// you will probably need to do use your own locks.
 class JSI_EXPORT Runtime : public ICast {
-public:
+ public:
   virtual ~Runtime();
 
   ICast* castInterface(const UUID& interfaceUUID) override;
@@ -361,8 +287,8 @@ public:
   /// call a global function than using the JSI APIs to read the function
   /// property from the global object and then calling it explicitly.
   virtual Value evaluateJavaScript(
-                                   const std::shared_ptr<const Buffer>& buffer,
-                                   const std::string& sourceURL) = 0;
+      const std::shared_ptr<const Buffer>& buffer,
+      const std::string& sourceURL) = 0;
 
   /// Prepares to evaluate the given JavaScript \c buffer by processing it into
   /// a form optimized for execution. This may include pre-parsing, compiling,
@@ -376,15 +302,15 @@ public:
   /// As with evaluateJavaScript(), using JavaScript code should be avoided
   /// when the JSI API is sufficient.
   virtual std::shared_ptr<const PreparedJavaScript> prepareJavaScript(
-                                                                      const std::shared_ptr<const Buffer>& buffer,
-                                                                      std::string sourceURL) = 0;
+      const std::shared_ptr<const Buffer>& buffer,
+      std::string sourceURL) = 0;
 
   /// Evaluates a PreparedJavaScript. If evaluation causes an error, a
   /// JSIException will be thrown.
   /// As with evaluateJavaScript(), using JavaScript code should be avoided
   /// when the JSI API is sufficient.
   virtual Value evaluatePreparedJavaScript(
-                                           const std::shared_ptr<const PreparedJavaScript>& js) = 0;
+      const std::shared_ptr<const PreparedJavaScript>& js) = 0;
 
   /// Queues a microtask in the JavaScript VM internal Microtask (a.k.a. Job in
   /// ECMA262) queue, to be executed when the host drains microtasks in
@@ -454,7 +380,7 @@ public:
   /// data associated with the uuid, return a null pointer.
   std::shared_ptr<void> getRuntimeData(const UUID& uuid);
 
-protected:
+ protected:
   friend class Pointer;
   friend class PropNameID;
   friend class Symbol;
@@ -474,9 +400,9 @@ protected:
   /// destroyed, or if an entry at an existing key is overwritten, the runtime
   /// will release its ownership by calling \p deleter.
   virtual void setRuntimeDataImpl(
-                                  const UUID& uuid,
-                                  const void* data,
-                                  void (*deleter)(const void* data));
+      const UUID& uuid,
+      const void* data,
+      void (*deleter)(const void* data));
 
   /// Returns the data associated with the \p uuid in the runtime. If there's no
   /// data associated with the uuid, return a null pointer.
@@ -490,7 +416,7 @@ protected:
   struct PointerValue {
     virtual void invalidate() noexcept = 0;
 
-  protected:
+   protected:
     virtual ~PointerValue() = default;
   };
 
@@ -501,14 +427,14 @@ protected:
   virtual PointerValue* clonePropNameID(const Runtime::PointerValue* pv) = 0;
 
   virtual PropNameID createPropNameIDFromAscii(
-                                               const char* str,
-                                               size_t length) = 0;
+      const char* str,
+      size_t length) = 0;
   virtual PropNameID createPropNameIDFromUtf8(
-                                              const uint8_t* utf8,
-                                              size_t length) = 0;
+      const uint8_t* utf8,
+      size_t length) = 0;
   virtual PropNameID createPropNameIDFromUtf16(
-                                               const char16_t* utf16,
-                                               size_t length);
+      const char16_t* utf16,
+      size_t length);
   virtual PropNameID createPropNameIDFromString(const String& str) = 0;
   virtual PropNameID createPropNameIDFromSymbol(const Symbol& sym) = 0;
   virtual std::string utf8(const PropNameID&) = 0;
@@ -543,8 +469,8 @@ protected:
   virtual bool hasNativeState(const jsi::Object&) = 0;
   virtual std::shared_ptr<NativeState> getNativeState(const jsi::Object&) = 0;
   virtual void setNativeState(
-                              const jsi::Object&,
-                              std::shared_ptr<NativeState> state) = 0;
+      const jsi::Object&,
+      std::shared_ptr<NativeState> state) = 0;
 
   virtual void setPrototypeOf(const Object& object, const Value& prototype);
   virtual Value getPrototypeOf(const Object& object);
@@ -556,9 +482,9 @@ protected:
   virtual bool hasProperty(const Object&, const String& name) = 0;
   virtual bool hasProperty(const Object&, const Value& name);
   virtual void setPropertyValue(
-                                const Object&,
-                                const PropNameID& name,
-                                const Value& value) = 0;
+      const Object&,
+      const PropNameID& name,
+      const Value& value) = 0;
   virtual void
   setPropertyValue(const Object&, const String& name, const Value& value) = 0;
   virtual void
@@ -580,7 +506,7 @@ protected:
 
   virtual Array createArray(size_t length) = 0;
   virtual ArrayBuffer createArrayBuffer(
-                                        std::shared_ptr<MutableBuffer> buffer) = 0;
+      std::shared_ptr<MutableBuffer> buffer) = 0;
   virtual size_t size(const Array&) = 0;
   virtual size_t size(const ArrayBuffer&) = 0;
   virtual uint8_t* data(const ArrayBuffer&) = 0;
@@ -589,14 +515,14 @@ protected:
   setValueAtIndexImpl(const Array&, size_t i, const Value& value) = 0;
 
   virtual Function createFunctionFromHostFunction(
-                                                  const PropNameID& name,
-                                                  unsigned int paramCount,
-                                                  HostFunctionType func) = 0;
+      const PropNameID& name,
+      unsigned int paramCount,
+      HostFunctionType func) = 0;
   virtual Value call(
-                     const Function&,
-                     const Value& jsThis,
-                     const Value* args,
-                     size_t count) = 0;
+      const Function&,
+      const Value& jsThis,
+      const Value* args,
+      size_t count) = 0;
   virtual Value
   callAsConstructor(const Function&, const Value* args, size_t count) = 0;
 
@@ -614,8 +540,8 @@ protected:
 
   /// See Object::setExternalMemoryPressure.
   virtual void setExternalMemoryPressure(
-                                         const jsi::Object& obj,
-                                         size_t amount) = 0;
+      const jsi::Object& obj,
+      size_t amount) = 0;
 
   virtual std::u16string utf16(const String& str);
   virtual std::u16string utf16(const PropNameID& sym);
@@ -630,9 +556,9 @@ protected:
   /// must not access runtime functionality, as any operation on the runtime may
   /// invalidate the data pointers.
   virtual void getStringData(
-                             const jsi::String& str,
-                             void* ctx,
-                             void (*cb)(void* ctx, bool ascii, const void* data, size_t num));
+      const jsi::String& str,
+      void* ctx,
+      void (*cb)(void* ctx, bool ascii, const void* data, size_t num));
 
   /// Invokes the provided callback \p cb with the PropNameID content in \p sym.
   /// The callback must take in three arguments: bool ascii, const void* data,
@@ -644,9 +570,9 @@ protected:
   /// must not access runtime functionality, as any operation on the runtime may
   /// invalidate the data pointers.
   virtual void getPropNameIdData(
-                                 const jsi::PropNameID& sym,
-                                 void* ctx,
-                                 void (*cb)(void* ctx, bool ascii, const void* data, size_t num));
+      const jsi::PropNameID& sym,
+      void* ctx,
+      void (*cb)(void* ctx, bool ascii, const void* data, size_t num));
 
   // These exist so derived classes can access the private parts of
   // Value, Symbol, String, and Object, which are all friends of Runtime.
@@ -659,11 +585,11 @@ protected:
   friend class ::FBJSRuntime;
   template <typename Plain, typename Base>
   friend class RuntimeDecorator;
-} SWIFT_UNSAFE_REFERENCE;
+};
 
 // Base class for pointer-storing types.
 class JSI_EXPORT Pointer {
-protected:
+ protected:
   explicit Pointer(Pointer&& other) noexcept : ptr_(other.ptr_) {
     other.ptr_ = nullptr;
   }
@@ -686,11 +612,11 @@ protected:
 
 /// Represents something that can be a JS property key.  Movable, not copyable.
 class JSI_EXPORT PropNameID : public Pointer {
-public:
+ public:
   using Pointer::Pointer;
 
   PropNameID(Runtime& runtime, const PropNameID& other)
-  : Pointer(runtime.clonePropNameID(other.ptr_)) {}
+      : Pointer(runtime.clonePropNameID(other.ptr_)) {}
 
   PropNameID(PropNameID&& other) = default;
   PropNameID& operator=(PropNameID&& other) = default;
@@ -724,7 +650,7 @@ public:
   /// Results are undefined if \p utf8 contains invalid code points.
   static PropNameID forUtf8(Runtime& runtime, const std::string& utf8) {
     return runtime.createPropNameIDFromUtf8(
-                                            reinterpret_cast<const uint8_t*>(utf8.data()), utf8.size());
+        reinterpret_cast<const uint8_t*>(utf8.data()), utf8.size());
   }
 
   /// Given a series of UTF-16 encoded code units, create a PropNameId. The
@@ -781,15 +707,15 @@ public:
   template <typename CB>
   void getPropNameIdData(Runtime& runtime, CB& cb) const {
     runtime.getPropNameIdData(
-                              *this, &cb, [](void* ctx, bool ascii, const void* data, size_t num) {
-                                (*((CB*)ctx))(ascii, data, num);
-                              });
+        *this, &cb, [](void* ctx, bool ascii, const void* data, size_t num) {
+          (*((CB*)ctx))(ascii, data, num);
+        });
   }
 
   static bool compare(
-                      Runtime& runtime,
-                      const jsi::PropNameID& a,
-                      const jsi::PropNameID& b) {
+      Runtime& runtime,
+      const jsi::PropNameID& a,
+      const jsi::PropNameID& b) {
     return runtime.compare(a, b);
   }
 
@@ -803,7 +729,7 @@ public:
 /// or element in an array.  Complete support for creating will come
 /// later.
 class JSI_EXPORT Symbol : public Pointer {
-public:
+ public:
   using Pointer::Pointer;
 
   Symbol(Symbol&& other) = default;
@@ -826,7 +752,7 @@ public:
 
 /// Represents a JS BigInt.  Movable, not copyable.
 class JSI_EXPORT BigInt : public Pointer {
-public:
+ public:
   using Pointer::Pointer;
 
   BigInt(BigInt&& other) = default;
@@ -885,7 +811,7 @@ public:
 
 /// Represents a JS String.  Movable, not copyable.
 class JSI_EXPORT String : public Pointer {
-public:
+ public:
   using Pointer::Pointer;
 
   String(String&& other) = default;
@@ -923,7 +849,7 @@ public:
   /// undefined if \p utf8 contains invalid code points.
   static String createFromUtf8(Runtime& runtime, const std::string& utf8) {
     return runtime.createStringFromUtf8(
-                                        reinterpret_cast<const uint8_t*>(utf8.data()), utf8.length());
+        reinterpret_cast<const uint8_t*>(utf8.data()), utf8.length());
   }
 
   /// Given a series of UTF-16 encoded code units, create a JS String. The input
@@ -967,9 +893,9 @@ public:
   template <typename CB>
   void getStringData(Runtime& runtime, CB& cb) const {
     runtime.getStringData(
-                          *this, &cb, [](void* ctx, bool ascii, const void* data, size_t num) {
-                            (*((CB*)ctx))(ascii, data, num);
-                          });
+        *this, &cb, [](void* ctx, bool ascii, const void* data, size_t num) {
+          (*((CB*)ctx))(ascii, data, num);
+        });
   }
 
   friend class Runtime;
@@ -981,7 +907,7 @@ class Function;
 
 /// Represents a JS Object.  Movable, not copyable.
 class JSI_EXPORT Object : public Pointer {
-public:
+ public:
   using Pointer::Pointer;
 
   Object(Object&& other) = default;
@@ -991,8 +917,8 @@ public:
   explicit Object(Runtime& runtime) : Object(runtime.createObject()) {}
 
   static Object createFromHostObject(
-                                     Runtime& runtime,
-                                     std::shared_ptr<HostObject> ho) {
+      Runtime& runtime,
+      std::shared_ptr<HostObject> ho) {
     return runtime.createObject(ho);
   }
 
@@ -1199,7 +1125,7 @@ public:
   ///
   /// Throws a type error if this object is a proxy or host object.
   void setNativeState(Runtime& runtime, std::shared_ptr<NativeState> state)
-  const;
+      const;
 
   /// \return same as \c getProperty(name).asObject(), except with
   /// a better exception message.
@@ -1227,23 +1153,23 @@ public:
   /// no longer factor into GC decisions.
   void setExternalMemoryPressure(Runtime& runtime, size_t amt) const;
 
-protected:
+ protected:
   void setPropertyValue(
-                        Runtime& runtime,
-                        const String& name,
-                        const Value& value) const {
-                          return runtime.setPropertyValue(*this, name, value);
-                        }
+      Runtime& runtime,
+      const String& name,
+      const Value& value) const {
+    return runtime.setPropertyValue(*this, name, value);
+  }
 
   void setPropertyValue(
-                        Runtime& runtime,
-                        const PropNameID& name,
-                        const Value& value) const {
-                          return runtime.setPropertyValue(*this, name, value);
-                        }
+      Runtime& runtime,
+      const PropNameID& name,
+      const Value& value) const {
+    return runtime.setPropertyValue(*this, name, value);
+  }
 
   void setPropertyValue(Runtime& runtime, const Value& name, const Value& value)
-  const {
+      const {
     return runtime.setPropertyValue(*this, name, value);
   }
 
@@ -1255,7 +1181,7 @@ protected:
 /// to an Object are these, the object is eligible for GC.  Method
 /// names are inspired by C++ weak_ptr.  Movable, not copyable.
 class JSI_EXPORT WeakObject : public Pointer {
-public:
+ public:
   using Pointer::Pointer;
 
   WeakObject(WeakObject&& other) = default;
@@ -1263,7 +1189,7 @@ public:
 
   /// Create a WeakObject from an Object.
   WeakObject(Runtime& runtime, const Object& o)
-  : WeakObject(runtime.createWeakObject(o)) {}
+      : WeakObject(runtime.createWeakObject(o)) {}
 
   /// \return a Value representing the underlying Object if it is still valid;
   /// otherwise returns \c undefined.  Note that this method has nothing to do
@@ -1277,7 +1203,7 @@ public:
 /// Represents a JS Object which can be efficiently used as an array
 /// with integral indices.
 class JSI_EXPORT Array : public Object {
-public:
+ public:
   Array(Array&&) = default;
   /// Creates a new Array instance, with \c length undefined elements.
   Array(Runtime& runtime, size_t length) : Array(runtime.createArray(length)) {}
@@ -1316,16 +1242,16 @@ public:
 
   /// Creates a new Array instance from initializer list.
   static Array createWithElements(
-                                  Runtime& runtime,
-                                  std::initializer_list<Value> elements);
+      Runtime& runtime,
+      std::initializer_list<Value> elements);
 
-private:
+ private:
   friend class Object;
   friend class Value;
   friend class Runtime;
 
   void setValueAtIndexImpl(Runtime& runtime, size_t i, const Value& value)
-  const {
+      const {
     return runtime.setValueAtIndexImpl(*this, i, value);
   }
 
@@ -1334,12 +1260,12 @@ private:
 
 /// Represents a JSArrayBuffer
 class JSI_EXPORT ArrayBuffer : public Object {
-public:
+ public:
   ArrayBuffer(ArrayBuffer&&) = default;
   ArrayBuffer& operator=(ArrayBuffer&&) = default;
 
   ArrayBuffer(Runtime& runtime, std::shared_ptr<MutableBuffer> buffer)
-  : ArrayBuffer(runtime.createArrayBuffer(std::move(buffer))) {}
+      : ArrayBuffer(runtime.createArrayBuffer(std::move(buffer))) {}
 
   /// \return the size of the ArrayBuffer storage. This is not affected by
   /// overriding the byteLength property.
@@ -1356,7 +1282,7 @@ public:
     return runtime.data(*this);
   }
 
-private:
+ private:
   friend class Object;
   friend class Value;
   friend class Runtime;
@@ -1366,7 +1292,7 @@ private:
 
 /// Represents a JS Object which is guaranteed to be Callable.
 class JSI_EXPORT Function : public Object {
-public:
+ public:
   Function(Function&&) = default;
   Function& operator=(Function&&) = default;
 
@@ -1382,10 +1308,10 @@ public:
   /// any captured values, you are responsible for ensuring that their
   /// destructors are safe to call on any thread.
   static Function createFromHostFunction(
-                                         Runtime& runtime,
-                                         const jsi::PropNameID& name,
-                                         unsigned int paramCount,
-                                         jsi::HostFunctionType func);
+      Runtime& runtime,
+      const jsi::PropNameID& name,
+      unsigned int paramCount,
+      jsi::HostFunctionType func);
 
   /// Calls the function with \c count \c args.  The \c this value of the JS
   /// function will not be set by the C++ caller, similar to calling
@@ -1417,34 +1343,34 @@ public:
   /// Calls the function with \c count \c args and \c jsThis value passed
   /// as the \c this value.
   Value callWithThis(
-                     Runtime& Runtime,
-                     const Object& jsThis,
-                     const Value* args,
-                     size_t count) const;
+      Runtime& Runtime,
+      const Object& jsThis,
+      const Value* args,
+      size_t count) const;
 
   /// Calls the function with a \c std::initializer_list of Value
   /// arguments and \c jsThis passed as the \c this value.
   Value callWithThis(
-                     Runtime& runtime,
-                     const Object& jsThis,
-                     std::initializer_list<Value> args) const;
+      Runtime& runtime,
+      const Object& jsThis,
+      std::initializer_list<Value> args) const;
 
   /// Calls the function with any number of arguments similarly to
   /// Object::setProperty(), and with \c jsThis passed as the \c this value.
   template <typename... Args>
   Value callWithThis(Runtime& runtime, const Object& jsThis, Args&&... args)
-  const;
+      const;
 
   /// Calls the function as a constructor with \c count \c args. Equivalent
   /// to calling `new Func` where `Func` is the js function reqresented by
   /// this.
   Value callAsConstructor(Runtime& runtime, const Value* args, size_t count)
-  const;
+      const;
 
   /// Same as above `callAsConstructor`, except use an initializer_list to
   /// supply the arguments.
   Value callAsConstructor(Runtime& runtime, std::initializer_list<Value> args)
-  const;
+      const;
 
   /// Same as above `callAsConstructor`, but automatically converts/wraps
   /// any argument with a jsi Value.
@@ -1470,7 +1396,7 @@ public:
     return runtime.getHostFunction(*this);
   }
 
-private:
+ private:
   friend class Object;
   friend class Value;
   friend class Runtime;
@@ -1482,7 +1408,7 @@ private:
 /// string, or object).  Movable, or explicitly copyable (has no copy
 /// ctor).
 class JSI_EXPORT Value {
-public:
+ public:
   /// Default ctor creates an \c undefined JS value.
   Value() noexcept : Value(UndefinedKind) {}
 
@@ -1506,12 +1432,12 @@ public:
 
   /// Moves a Symbol, String, or Object rvalue into a new JS value.
   template <
-  typename T,
-  typename = std::enable_if_t<
-  std::is_base_of<Symbol, T>::value ||
-  std::is_base_of<BigInt, T>::value ||
-  std::is_base_of<String, T>::value ||
-  std::is_base_of<Object, T>::value>>
+      typename T,
+      typename = std::enable_if_t<
+          std::is_base_of<Symbol, T>::value ||
+          std::is_base_of<BigInt, T>::value ||
+          std::is_base_of<String, T>::value ||
+          std::is_base_of<Object, T>::value>>
   /* implicit */ Value(T&& other) : Value(kindOf(other)) {
     new (&data_.pointer) T(std::move(other));
   }
@@ -1521,8 +1447,8 @@ public:
   template <typename T = void>
   Value(const char*) {
     static_assert(
-                  !std::is_same<void, T>::value,
-                  "Value cannot be constructed directly from const char*");
+        !std::is_same<void, T>::value,
+        "Value cannot be constructed directly from const char*");
   }
 
   Value(Value&& other) noexcept;
@@ -1555,8 +1481,8 @@ public:
   template <typename T = void>
   Value(Runtime&, const char*) {
     static_assert(
-                  !std::is_same<T, void>::value,
-                  "Value cannot be constructed directly from const char*");
+        !std::is_same<T, void>::value,
+        "Value cannot be constructed directly from const char*");
   }
 
   ~Value();
@@ -1721,7 +1647,7 @@ public:
   // \return a String like JS .toString() would do.
   String toString(Runtime& runtime) const;
 
-private:
+ private:
   friend class Runtime;
 
   enum ValueKind {
@@ -1740,8 +1666,8 @@ private:
     // Value's ctor and dtor will manage the lifecycle of the contained Data.
     Data() {
       static_assert(
-                    sizeof(Data) == sizeof(uint64_t),
-                    "Value data should fit in a 64-bit register");
+          sizeof(Data) == sizeof(uint64_t),
+          "Value data should fit in a 64-bit register");
     }
     ~Data() {}
 
@@ -1792,7 +1718,7 @@ private:
 /// variables in which case destructor calls don't require any additional
 /// locking, provided that the lock (if any) is managed with RAII helpers.
 class JSI_EXPORT Scope {
-public:
+ public:
   explicit Scope(Runtime& rt) : rt_(rt), prv_(rt.pushScope()) {}
   ~Scope() {
     rt_.popScope(prv_);
@@ -1810,18 +1736,18 @@ public:
     return f();
   }
 
-private:
+ private:
   Runtime& rt_;
   Runtime::ScopeState* prv_;
 };
 
 /// Base class for jsi exceptions
 class JSI_EXPORT JSIException : public std::exception {
-protected:
+ protected:
   JSIException() {}
   JSIException(std::string what) : what_(std::move(what)) {}
 
-public:
+ public:
   JSIException(const JSIException&) = default;
 
   virtual const char* what() const noexcept override {
@@ -1830,14 +1756,14 @@ public:
 
   virtual ~JSIException() override;
 
-protected:
+ protected:
   std::string what_;
 };
 
 /// This exception will be thrown by API functions on errors not related to
 /// JavaScript execution.
 class JSI_EXPORT JSINativeException : public JSIException {
-public:
+ public:
   JSINativeException(std::string what) : JSIException(std::move(what)) {}
 
   JSINativeException(const JSINativeException&) = default;
@@ -1849,7 +1775,7 @@ public:
 /// operation causes an exception as described by the spec, or as
 /// otherwise described.
 class JSI_EXPORT JSError : public JSIException {
-public:
+ public:
   /// Creates a JSError referring to provided \c value
   JSError(Runtime& r, Value&& value);
 
@@ -1860,7 +1786,7 @@ public:
   /// Creates a JSError referring to new \c Error instance capturing current
   /// JavaScript stack. The error message property is set to given \c message.
   JSError(Runtime& rt, const char* message)
-  : JSError(rt, std::string(message)) {}
+      : JSError(rt, std::string(message)) {}
 
   /// Creates a JSError referring to a JavaScript Object having message and
   /// stack properties set to provided values.
@@ -1893,7 +1819,7 @@ public:
     return *value_;
   }
 
-private:
+ private:
   // This initializes the value_ member and does some other
   // validation, so it must be called by every branch through the
   // constructors.
@@ -1935,4 +1861,4 @@ std::shared_ptr<U> dynamicInterfaceCast(T&& ptr) {
 } // namespace jsi
 } // namespace facebook
 
-#include "jsi-inl.h"
+#include <jsi/jsi-inl.h>

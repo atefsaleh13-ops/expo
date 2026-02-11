@@ -24,9 +24,13 @@ let package = Package(
       name: "ExpoModulesJSI",
       dependencies: [
         "ExpoModulesJSI-Cxx",
+        "hermes",
+        "React",
+        "ReactNativeDependencies",
       ],
       cxxSettings: [
-        .headerSearchPath(".."),
+        .headerSearchPath("../../Sources/hermes-engine/destroot/include"),
+        .headerSearchPath("../../Sources/React/React.xcframework/Headers/React_Core"),
       ],
       swiftSettings: [
         .interoperabilityMode(.Cxx),
@@ -43,7 +47,27 @@ let package = Package(
           "-no-verify-emitted-module-interface",
           "-Xfrontend",
           "-clang-header-expose-decls=has-expose-attr",
-        ])
+
+          // Swift include paths
+          "-Xcc",
+          "-I../../Sources/hermes-engine/destroot/include",
+          "-Xcc",
+          "-I../../Sources/React/React.xcframework/Headers",
+          "-Xcc",
+          "-I../../Sources/ReactNativeDependencies/ReactNativeDependencies.xcframework/Headers",
+
+          // API Notes
+          "-Xcc",
+          "-iapinotes-modules",
+          "-Xcc",
+          "../../APINotes",
+
+          // VFS overlay
+          "-Xcc",
+          "-ivfsoverlay",
+          "-Xcc",
+          "../../Sources/React/React.xcframework/React-VFS.yaml"
+        ]),
       ],
       linkerSettings: [],
     ),
@@ -51,41 +75,37 @@ let package = Package(
     // C++ target (internal)
     .target(
       name: "ExpoModulesJSI-Cxx",
-      dependencies: [],
-      cxxSettings: [
-        .headerSearchPath(".."),
-      ],
-      linkerSettings: [
-        .unsafeFlags([
-          "-Wl", "-undefined", "dynamic_lookup"
-        ]),
-      ],
-    ),
-
-    .target(
-      name: "jsi",
-      dependencies: [],
-      publicHeadersPath: "",
-    ),
-
-    .target(
-      name: "hermes",
       dependencies: [
-        "jsi"
+        "React"
       ],
-      publicHeadersPath: "",
       cxxSettings: [
-        .headerSearchPath(".."),
+        .headerSearchPath("../../Sources/hermes-engine/destroot/include"),
+//        .headerSearchPath("../../Sources/React/React.xcframework/Headers/React_Core"),
+        .unsafeFlags([
+          "-ivfsoverlay",
+          "../../Sources/React/React.xcframework/React-VFS.yaml"
+        ])
       ],
+    ),
+
+    .binaryTarget(
+      name: "hermes",
+      path: "./Sources/hermes-engine/destroot/Library/Frameworks/universal/hermesvm.xcframework"
+    ),
+
+    .binaryTarget(
+      name: "React",
+      path: "./Sources/React/React.xcframework"
+    ),
+    .binaryTarget(
+      name: "ReactNativeDependencies",
+      path: "./Sources/ReactNativeDependencies/ReactNativeDependencies.xcframework"
     ),
 
     // Tests
     .testTarget(
       name: "Tests",
       dependencies: ["ExpoModulesJSI"],
-      swiftSettings: [
-        .interoperabilityMode(.Cxx)
-      ],
     ),
   ],
   swiftLanguageModes: [.v6],

@@ -3,6 +3,10 @@
 internal import jsi
 internal import ExpoModulesJSI_Cxx
 
+/**
+ A Swift representation of a JavaScript object. Provides access to JavaScript object properties and methods,
+ supporting property access, modification, enumeration, prototype manipulation, and function calling.
+ */
 public struct JavaScriptObject: JavaScriptType, Sendable, ~Copyable {
   internal let runtime: JavaScriptRuntime
   internal var pointee: facebook.jsi.Object
@@ -80,6 +84,36 @@ public struct JavaScriptObject: JavaScriptType, Sendable, ~Copyable {
     return JavaScriptValue(runtime, pointee.getProperty(runtime.pointee, name))
   }
 
+  /**
+   Accesses nested properties in a single subscript operation by traversing the object chain.
+   This subscript provides a convenient way to access deeply nested properties without
+   multiple chained calls to `getProperty()`. Each key in the chain is accessed sequentially,
+   treating intermediate values as objects.
+
+   - Parameters:
+     - key: The first property name to access on this object
+     - nestedKeys: Variadic list of subsequent property names to access on nested objects
+   - Returns: The `JavaScriptValue` at the end of the property chain
+   - Note: Each intermediate value in the chain (except the last) must be an object.
+     If any intermediate value is not an object, the behavior is undefined and may crash.
+   */
+  public subscript(_ key: String, _ nestedKeys: String...) -> JavaScriptValue {
+    let jsiRuntime = runtime.pointee
+    var value = pointee.getProperty(jsiRuntime, key)
+
+    for key in nestedKeys {
+      value = value.getObject(jsiRuntime).getProperty(jsiRuntime, key)
+    }
+    return JavaScriptValue(runtime, value)
+  }
+
+  /**
+   Returns an array of the object's own enumerable property names.
+   This method is equivalent to JavaScript's `Object.keys()`, returning only properties
+   that are enumerable and directly owned by the object (not inherited from the prototype chain).
+
+   - Returns: An array of property names as strings
+   */
   public func getPropertyNames() -> [String] {
     let jsiRuntime = runtime.pointee
     let propertyNames: facebook.jsi.Array = pointee.getPropertyNames(jsiRuntime)
@@ -255,6 +289,114 @@ public struct JavaScriptObject: JavaScriptType, Sendable, ~Copyable {
   public func setExternalMemoryPressure(_ size: Int) {
     pointee.setExternalMemoryPressure(runtime.pointee, size)
   }
+
+  // MARK: - Property options and descriptor
+
+  /**
+   Options for defining property attributes on JavaScript objects. These options correspond to the property
+   descriptor attributes in JavaScript's `Object.defineProperty()` method. They control how a property behaves when
+   accessed, enumerated, or modified.
+
+   - SeeAlso: `PropertyDescriptor` for more fine-grained control over property definitions
+   */
+  public struct PropertyOptions: OptionSet, Sendable {
+    public let rawValue: Int
+
+    public init(rawValue: Int) {
+      self.rawValue = rawValue
+    }
+    /**
+     When `true`, the property descriptor may be changed and the property may be deleted.
+     Default is `false` when not specified.
+
+     Corresponds to JavaScript's `configurable` property attribute. A configurable property
+     can have its descriptor redefined or be deleted from the object.
+     */
+    public static let configurable = PropertyOptions(rawValue: 1 << 0)
+    /**
+     When `true`, the property shows up during enumeration of properties.
+     Default is `false` when not specified.
+
+     Corresponds to JavaScript's `enumerable` property attribute. Enumerable properties
+     appear in `for...in` loops and `Object.keys()` results.
+     */
+    public static let enumerable = PropertyOptions(rawValue: 1 << 1)
+    /**
+     When `true`, the property's value can be changed with an assignment operator.
+     Default is `false` when not specified.
+
+     Corresponds to JavaScript's `writable` property attribute. Writable properties
+     can be modified after they are defined.
+     */
+    public static let writable = PropertyOptions(rawValue: 1 << 2)
+  }
+  /**
+   A descriptor that defines the characteristics of a property on a JavaScript object.
+   Property descriptors provide fine-grained control over how properties behave,
+   corresponding directly to JavaScript's property descriptor objects used with
+   `Object.defineProperty()`. Each descriptor specifies whether the property is
+   configurable, enumerable, writable, and what value it should hold.
+
+   - Note: All boolean properties default to `false`, matching JavaScript's behavior
+     when properties are defined via `Object.defineProperty()`.
+   - SeeAlso: `PropertyOptions` for a simpler option-set based approach
+   */
+  public struct PropertyDescriptor: ~Copyable {
+    /// When `true`, the property descriptor may be changed and the property may be deleted from the object.
+    let configurable: Bool
+
+    /// When `true`, the property shows up during enumeration (e.g., `for...in` loops, `Object.keys()`).
+    let enumerable: Bool
+
+    /// When `true`, the property's value can be changed with an assignment operator.
+    let writable: Bool
+
+    /// The value associated with the property. Can be any JavaScript value or `nil`.
+    let value: JavaScriptValue?
+
+    /**
+     Creates a new property descriptor with the specified attributes.
+
+     - Parameters:
+       - configurable: Whether the property can be deleted or have its descriptor modified. Defaults to `false`.
+       - enumerable: Whether the property appears during enumeration. Defaults to `false`.
+       - writable: Whether the property's value can be changed. Defaults to `false`.
+       - value: The value to assign to the property. Defaults to `nil`.
+     - Note: When all parameters use their default values, this creates a non-configurable,
+       non-enumerable, non-writable property with no value (undefined in JavaScript).
+     */
+    public init(configurable: Bool = false, enumerable: Bool = false, writable: Bool = false, value: JavaScriptValue? = nil) {
+      self.configurable = configurable
+      self.enumerable = enumerable
+      self.writable = writable
+      self.value = value
+    }
+    /**
+     Converts the descriptor to a JavaScript object that can be used with `Object.defineProperty()`.
+     This method creates a JavaScript object with the descriptor's attributes set as properties.
+     Only attributes that are `true` or non-nil are included in the resulting object,
+     following JavaScript conventions.
+
+     - Parameter runtime: The JavaScript runtime in which to create the descriptor object
+     - Returns: A JavaScript object representing this property descriptor
+     */
+    public consuming func toObject(_ runtime: borrowing JavaScriptRuntime) -> JavaScriptObject {
+      let object = runtime.createObject()
+      if configurable {
+        object.setProperty("configurable", true)
+      }
+      if enumerable {
+        object.setProperty("enumerable", true)
+      }
+      if writable {
+        object.setProperty("writable", true)
+      }
+      if let value {
+        object.setProperty("value", value: value)
+      }
+      return object
+    }
+  }
 }
 
 extension JavaScriptObject: JSRepresentable {
@@ -274,48 +416,5 @@ extension JavaScriptObject: JSIRepresentable {
 
   func toJSIValue(in runtime: facebook.jsi.Runtime) -> facebook.jsi.Value {
     return asJSIValue()
-  }
-}
-
-public struct PropertyOptions: OptionSet, Sendable {
-  public let rawValue: Int
-  
-  public init(rawValue: Int) {
-    self.rawValue = rawValue
-  }
-  
-  public static let configurable = PropertyOptions(rawValue: 1 << 0)
-  public static let enumerable = PropertyOptions(rawValue: 1 << 1)
-  public static let writable = PropertyOptions(rawValue: 1 << 2)
-}
-
-public struct PropertyDescriptor: ~Copyable {
-  let configurable: Bool
-  let enumerable: Bool
-  let writable: Bool
-  let value: JavaScriptValue?
-
-  public init(configurable: Bool = false, enumerable: Bool = false, writable: Bool = false, value: JavaScriptValue? = nil) {
-    self.configurable = configurable
-    self.enumerable = enumerable
-    self.writable = writable
-    self.value = value
-  }
-
-  public consuming func toObject(_ runtime: borrowing JavaScriptRuntime) -> JavaScriptObject {
-    let object = runtime.createObject()
-    if configurable {
-      object.setProperty("configurable", true)
-    }
-    if enumerable {
-      object.setProperty("enumerable", true)
-    }
-    if writable {
-      object.setProperty("writable", true)
-    }
-    if let value {
-      object.setProperty("value", value: value)
-    }
-    return object
   }
 }

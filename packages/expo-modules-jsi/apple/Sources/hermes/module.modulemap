@@ -1,6 +1,0 @@
-module hermes {
-  umbrella header "hermes.h"
-
-  export *
-  module * { export * }
-}

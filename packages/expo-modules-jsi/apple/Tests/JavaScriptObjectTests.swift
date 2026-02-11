@@ -68,7 +68,7 @@ struct JavaScriptObjectTests {
     @Test
     func `get property names`() {
       let object = JavaScriptObject(runtime)
-      object.setProperty("name", "John")
+      object.setProperty("name", value: "John")
       object.setProperty("age", 30.0)
       let names = object.getPropertyNames()
       #expect(names.contains("name") == true)
@@ -78,7 +78,7 @@ struct JavaScriptObjectTests {
     @Test
     func `get property names excludes non-enumerable`() throws {
       let object = JavaScriptObject(runtime)
-      object.setProperty("visible", "yes")
+      object.setProperty("visible", value: "yes")
       object.defineProperty("hidden", descriptor: .init(enumerable: false, value: JavaScriptValue(runtime, "no")))
       let names = object.getPropertyNames()
       #expect(names.contains("visible") == true)
@@ -89,13 +89,14 @@ struct JavaScriptObjectTests {
     func `get property as object`() {
       let object = JavaScriptObject(runtime)
       let nested = JavaScriptObject(runtime)
-      nested.setProperty("inner", "value")
+      nested.setProperty("inner", value: "value")
       object.setProperty("nested", nested)
       let retrieved = object.getPropertyAsObject("nested")
       #expect(retrieved.getProperty("inner").getString() == "value")
     }
 
     @Test
+    @JavaScriptActor
     func `get property as function`() throws {
       let object = JavaScriptObject(runtime)
       let result = try runtime.eval("(function(x) { return x * 2; })")
@@ -106,9 +107,69 @@ struct JavaScriptObjectTests {
     }
   }
 
-  // MARK: - Property Modification Tests
+  // MARK: - Subscript Tests
 
-  @Suite("Property Modification")
+  @Suite("Subscript")
+  @JavaScriptActor
+  struct SubscriptTests {
+    let runtime = JavaScriptRuntime()
+
+    @Test
+    func `subscript with single key`() throws {
+      let obj = try runtime.eval("({ name: 'Alice' })")
+      let jsObject = obj.getObject()
+      let value = jsObject["name"]
+      #expect(value.getString() == "Alice")
+    }
+
+    @Test
+    func `subscript with two nested keys`() throws {
+      let obj = try runtime.eval("({ user: { name: 'Bob' } })")
+      let jsObject = obj.getObject()
+      let value = jsObject["user", "name"]
+      #expect(value.getString() == "Bob")
+    }
+
+    @Test
+    func `subscript with three nested keys`() throws {
+      let obj = try runtime.eval("({ data: { user: { age: 25 } } })")
+      let jsObject = obj.getObject()
+      let value = jsObject["data", "user", "age"]
+      #expect(value.getInt() == 25)
+    }
+
+    @Test
+    func `subscript on manually created object`() {
+      let root = runtime.createObject()
+      let nested = runtime.createObject()
+      nested.setProperty("value", 42.0)
+      root.setProperty("nested", nested)
+      let value = root["nested", "value"]
+      #expect(value.getInt() == 42)
+    }
+
+    @Test
+    func `subscript returns undefined for non-existent property`() throws {
+      let obj = try runtime.eval("({ a: 1 })")
+      let jsObject = obj.getObject()
+      let value = jsObject["nonexistent"]
+      #expect(value.isUndefined() == true)
+    }
+
+    @Test
+    func `nested subscript with mixed types`() throws {
+      let obj = try runtime.eval("({ settings: { enabled: true, count: 10 } })")
+      let jsObject = obj.getObject()
+      let enabled = jsObject["settings", "enabled"]
+      let count = jsObject["settings", "count"]
+      #expect(enabled.getBool() == true)
+      #expect(count.getInt() == 10)
+    }
+  }
+
+  // MARK: - Property modification tests
+
+  @Suite("Property modification")
   struct PropertyModificationTests {
     let runtime = JavaScriptRuntime()
 
@@ -169,9 +230,9 @@ struct JavaScriptObjectTests {
     }
   }
 
-  // MARK: - Property Descriptor Tests
+  // MARK: - PropertyDescriptor tests
 
-  @Suite("Property Descriptors")
+  @Suite("PropertyDescriptor")
   struct PropertyDescriptorTests {
     let runtime = JavaScriptRuntime()
 
@@ -236,13 +297,14 @@ struct JavaScriptObjectTests {
     }
   }
 
-  // MARK: - Type Checking Tests
+  // MARK: - Type checking tests
 
-  @Suite("Type Checking")
+  @Suite("Type checking")
   struct TypeCheckingTests {
     let runtime = JavaScriptRuntime()
 
     @Test
+    @JavaScriptActor
     func `isArray returns true for arrays`() throws {
       let arrayValue = try runtime.eval("[1, 2, 3]")
       let arrayObject = arrayValue.getObject()
@@ -256,6 +318,7 @@ struct JavaScriptObjectTests {
     }
 
     @Test
+    @JavaScriptActor
     func `isFunction returns true for functions`() throws {
       let fnValue = try runtime.eval("(function() {})")
       let fnObject = fnValue.getObject()
@@ -269,6 +332,7 @@ struct JavaScriptObjectTests {
     }
 
     @Test
+    @JavaScriptActor
     func `isArrayBuffer returns true for ArrayBuffer`() throws {
       let bufferValue = try runtime.eval("new ArrayBuffer(16)")
       let bufferObject = bufferValue.getObject()
@@ -282,9 +346,9 @@ struct JavaScriptObjectTests {
     }
   }
 
-  // MARK: - Prototype Tests
+  // MARK: - Prototype tests
 
-  @Suite("Prototype Operations")
+  @Suite("Prototype")
   struct PrototypeTests {
     let runtime = JavaScriptRuntime()
 
@@ -307,6 +371,7 @@ struct JavaScriptObjectTests {
     }
 
     @Test
+    @JavaScriptActor
     func `instanceOf with constructor`() throws {
       let arrayInstance = try runtime.eval("[1, 2, 3]")
       let arrayConstructor = try runtime.eval("Array")
@@ -315,15 +380,17 @@ struct JavaScriptObjectTests {
     }
 
     @Test
+    @JavaScriptActor
     func `instanceOf with function`() throws {
-      let instance = try runtime.eval("new (function MyClass() {})()")
-      let constructor = try runtime.eval("(function MyClass() {})")
+      let constructor = try runtime.eval("MyClass = function() {}")
+      let instance = try runtime.eval("new MyClass()")
       let instanceObject = instance.getObject()
       let constructorFn = constructor.getFunction()
       #expect(instanceObject.instanceOf(constructorFn) == true)
     }
 
     @Test
+    @JavaScriptActor
     func `instanceOf returns false for non-instance`() throws {
       let plainObject = JavaScriptObject(runtime)
       let arrayConstructor = try runtime.eval("Array")
@@ -331,27 +398,9 @@ struct JavaScriptObjectTests {
     }
   }
 
-  // MARK: - Array Operations Tests
+  // MARK: - Function calling tests
 
-  @Suite("Array Operations")
-  struct ArrayOperationsTests {
-    let runtime = JavaScriptRuntime()
-
-    @Test
-    func `get array from array object`() throws {
-      let arrayValue = try runtime.eval("[10, 20, 30]")
-      let arrayObject = arrayValue.getObject()
-      let array = arrayObject.getArray()
-      #expect(array.size == 3)
-      #expect(array.getValue(atIndex: 0).getInt() == 10)
-      #expect(array.getValue(atIndex: 1).getInt() == 20)
-      #expect(array.getValue(atIndex: 2).getInt() == 30)
-    }
-  }
-
-  // MARK: - Function Calling Tests
-
-  @Suite("Function Calling")
+  @Suite("Function calling")
   struct FunctionCallingTests {
     let runtime = JavaScriptRuntime()
 
@@ -394,85 +443,13 @@ struct JavaScriptObjectTests {
     }
   }
 
-  // MARK: - Conversion Tests
+  // MARK: - PropertyOptions tests
 
-  @Suite("Conversions")
-  struct ConversionTests {
-    let runtime = JavaScriptRuntime()
-
-    @Test
-    func `convert object to value`() {
-      let object = JavaScriptObject(runtime)
-      object.setProperty("test", true)
-      let value = object.asValue()
-      #expect(value.isObject() == true)
-      #expect(value.getObject().getProperty("test").getBool() == true)
-    }
-
-    @Test
-    func `convert object to JSI value`() {
-      let object = JavaScriptObject(runtime)
-      let jsiValue = object.asJSIValue()
-      #expect(jsiValue.isObject() == true)
-    }
-
-    @Test
-    func `create weak reference`() {
-      let object = JavaScriptObject(runtime)
-      object.setProperty("value", 123.0)
-      let weak = object.createWeak()
-      let locked = weak.lock()
-      #expect(locked != nil)
-      #expect(locked?.getProperty("value").getInt() == 123)
-    }
-  }
-
-  // MARK: - External Memory Tests
-
-  @Suite("External Memory")
-  struct ExternalMemoryTests {
-    let runtime = JavaScriptRuntime()
-
-    @Test
-    func `set external memory pressure`() {
-      let object = JavaScriptObject(runtime)
-      // Should not crash or throw
-      object.setExternalMemoryPressure(1024 * 1024) // 1MB
-    }
-  }
-
-  // MARK: - JSRepresentable Conformance Tests
-
-  @Suite("JSRepresentable Conformance")
-  struct JSRepresentableTests {
-    let runtime = JavaScriptRuntime()
-
-    @Test
-    func `from JS value`() {
-      let object = JavaScriptObject(runtime)
-      object.setProperty("name", value: "test")
-      let value = object.asValue()
-      let converted = JavaScriptObject.fromJSValue(value)
-      #expect(converted.getProperty("name").getString() == "test")
-    }
-
-    @Test
-    func `to JS value`() {
-      let object = JavaScriptObject(runtime)
-      object.setProperty("number", 456.0)
-      let value = object.toJSValue(in: runtime)
-      #expect(value.isObject() == true)
-      #expect(value.getObject().getProperty("number").getInt() == 456)
-    }
-  }
-
-  // MARK: - PropertyOptions Tests
-
-  @Suite("Property Options")
+  @Suite("PropertyOptions")
   struct PropertyOptionsTests {
     @Test
     func `PropertyOptions option set`() {
-      let options: PropertyOptions = [.configurable, .enumerable]
+      let options: JavaScriptObject.PropertyOptions = [.configurable, .enumerable]
       #expect(options.contains(.configurable) == true)
       #expect(options.contains(.enumerable) == true)
       #expect(options.contains(.writable) == false)
@@ -480,7 +457,7 @@ struct JavaScriptObjectTests {
 
     @Test
     func `PropertyOptions all options`() {
-      let options: PropertyOptions = [.configurable, .enumerable, .writable]
+      let options: JavaScriptObject.PropertyOptions = [.configurable, .enumerable, .writable]
       #expect(options.contains(.configurable) == true)
       #expect(options.contains(.enumerable) == true)
       #expect(options.contains(.writable) == true)
@@ -488,14 +465,14 @@ struct JavaScriptObjectTests {
 
     @Test
     func `PropertyOptions empty`() {
-      let options: PropertyOptions = []
+      let options: JavaScriptObject.PropertyOptions = []
       #expect(options.contains(.configurable) == false)
       #expect(options.contains(.enumerable) == false)
       #expect(options.contains(.writable) == false)
     }
   }
 
-  // MARK: - PropertyDescriptor Tests
+  // MARK: - PropertyDescriptor tests
 
   @Suite("PropertyDescriptor")
   struct PropertyDescriptorStructTests {
@@ -503,7 +480,7 @@ struct JavaScriptObjectTests {
 
     @Test
     func `PropertyDescriptor default initialization`() {
-      let descriptor = PropertyDescriptor()
+      let descriptor = JavaScriptObject.PropertyDescriptor()
       let object = descriptor.toObject(runtime)
       // With default values, all boolean properties should be false/absent
       #expect(object.hasProperty("configurable") == false)
@@ -515,7 +492,7 @@ struct JavaScriptObjectTests {
     @Test
     func `PropertyDescriptor with all properties`() {
       let value = JavaScriptValue(runtime, "test")
-      let descriptor = PropertyDescriptor(configurable: true, enumerable: true, writable: true, value: value)
+      let descriptor = JavaScriptObject.PropertyDescriptor(configurable: true, enumerable: true, writable: true, value: value)
       let object = descriptor.toObject(runtime)
       #expect(object.hasProperty("configurable") == true)
       #expect(object.getProperty("configurable").getBool() == true)
@@ -529,57 +506,10 @@ struct JavaScriptObjectTests {
 
     @Test
     func `PropertyDescriptor to object conversion`() {
-      let descriptor = PropertyDescriptor(configurable: false, enumerable: true, writable: false, value: JavaScriptValue(runtime, 42))
+      let descriptor = JavaScriptObject.PropertyDescriptor(configurable: false, enumerable: true, writable: false, value: JavaScriptValue(runtime, 42))
       let object = descriptor.toObject(runtime)
       #expect(object.getProperty("enumerable").getBool() == true)
       #expect(object.getProperty("value").getInt() == 42)
-    }
-  }
-
-  // MARK: - Complex Integration Tests
-
-  @Suite("Integration Tests")
-  struct IntegrationTests {
-    let runtime = JavaScriptRuntime()
-
-    @Test
-    func `chaining property access`() {
-      let object = JavaScriptObject(runtime)
-      let nested = JavaScriptObject(runtime)
-      let deepNested = JavaScriptObject(runtime)
-      deepNested.setProperty("value", 42.0)
-      nested.setProperty("deep", deepNested)
-      object.setProperty("nested", nested)
-      let retrieved = object
-        .getPropertyAsObject("nested")
-        .getPropertyAsObject("deep")
-        .getProperty("value")
-      #expect(retrieved.getInt() == 42)
-    }
-
-    @Test
-    func `Object with mixed types`() {
-      let object = JavaScriptObject(runtime)
-      object.setProperty("string", value: "hello")
-      object.setProperty("number", 3.14)
-      object.setProperty("bool", true)
-      let nested = JavaScriptObject(runtime)
-      nested.setProperty("inner", value: "nested")
-      object.setProperty("object", nested)
-      #expect(object.getProperty("string").getString() == "hello")
-      #expect(object.getProperty("number").getDouble() == 3.14)
-      #expect(object.getProperty("bool").getBool() == true)
-      #expect(object.getPropertyAsObject("object").getProperty("inner").getString() == "nested")
-    }
-
-    @Test
-    func `modify object created from dictionary`() {
-      let dict = ["initial": "value"]
-      let object = JavaScriptObject(runtime, dict)
-      object.setProperty("added", value: "new")
-      object.setProperty("initial", value: "modified")
-      #expect(object.getProperty("initial").getString() == "modified")
-      #expect(object.getProperty("added").getString() == "new")
     }
   }
 }

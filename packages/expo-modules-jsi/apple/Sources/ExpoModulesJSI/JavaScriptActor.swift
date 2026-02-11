@@ -44,6 +44,13 @@ public actor JavaScriptActor: GlobalActor {
       return try rawFn()
     }
   }
+
+  /**
+   Stops program execution if the actor's executor is not isolating the current context.
+   */
+  public static func checkIsolated() {
+    shared.executor.checkIsolated()
+  }
 }
 
 /**

@@ -1,6 +1,14 @@
 internal import jsi
 internal import ExpoModulesJSI_Cxx
 
+/**
+ A Swift representation of a JavaScript Promise.
+
+ `JavaScriptPromise` bridges JavaScript promises with Swift's async/await, allowing you to create
+ deferred promises that can be resolved or rejected from Swift, or wrap existing JavaScript promises
+ to await their results. It provides type-safe access to promise resolution and rejection, integrating
+ JavaScript's asynchronous patterns with Swift's concurrency model.
+ */
 public struct JavaScriptPromise: JavaScriptType, ~Copyable {
   private typealias PromiseContinuation = CheckedContinuation<JavaScriptValue.Ref, any Error>
 
@@ -91,7 +99,7 @@ public struct JavaScriptPromise: JavaScriptType, ~Copyable {
     }
 
     // `resolve` is not isolated, so make sure to jump to JS thread.
-    runtime.execute { [resolveFunction, rejectFunction] in
+    runtime.schedule(priority: .immediate) { [resolveFunction, rejectFunction] in
       // Call the actual resolver given in the Promise setup.
       // This will also call `deferredPromise.resolve` in the `then` handler.
       _ = try! resolveFunction.take().getFunction().call(arguments: result)
@@ -112,7 +120,7 @@ public struct JavaScriptPromise: JavaScriptType, ~Copyable {
     let errorValue = JavaScriptError(runtime, message: error.localizedDescription).asValue()
 
     // `reject` is not isolated, so make sure to jump to JS thread.
-    runtime.execute { [resolveFunction, rejectFunction] in
+    runtime.schedule(priority: .immediate) { [resolveFunction, rejectFunction] in
       // Call the actual rejecter given in the Promise setup.
       // This will also call `deferredPromise.reject` in the `then` handler.
       _ = try! rejectFunction.take().getFunction().call(arguments: errorValue)

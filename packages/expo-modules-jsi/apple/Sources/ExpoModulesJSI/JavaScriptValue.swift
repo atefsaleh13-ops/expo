@@ -150,7 +150,7 @@ public final class JavaScriptValue: JavaScriptType, Escapable {
         result.reserveCapacity(size)
 
         for index in 0..<size {
-          result.append(array.getValue(atIndex: index).getAny())
+          result.append((try? array.getValue(atIndex: index).getAny()) as Any)
         }
         return result
       }
@@ -249,7 +249,59 @@ public final class JavaScriptValue: JavaScriptType, Escapable {
   }
 
   /**
-   Same as calling `JSON.stringify` with this value, given replacer and space.
+   Converts the JavaScript value to a JSON string representation.
+
+   This method is equivalent to calling `JSON.stringify()` in JavaScript with this value
+   as the first argument. It serializes the value into a JSON-formatted string, with
+   optional control over the serialization process through the replacer and space parameters.
+
+   - Parameters:
+     - replacer: An optional function or array that alters the behavior of the stringification process.
+       - If a function: Called for each property, receiving the key and value as arguments.
+       - If an array: Only properties whose names are in the array will be included in the result.
+       - If `nil`: All properties are included.
+     - space: An optional string or number that controls the indentation and spacing in the output.
+       - If a number: Indicates the number of spaces to use for indentation (clamped to 10).
+       - If a string: Used as the indentation string (truncated to 10 characters).
+       - If `nil`: No whitespace is added, resulting in compact output.
+
+   - Returns: A JSON string representation of the value, or `nil` if the value cannot be
+     serialized (e.g., functions, symbols, or undefined values in object properties).
+
+   - Throws: An error if the serialization fails (e.g., circular references, or if a
+     replacer function throws an error).
+
+   ## Examples
+   ```swift
+   let runtime = JavaScriptRuntime()
+
+   // Simple value
+   let number = JavaScriptValue(runtime, 42)
+   try number.jsonStringify() // "42"
+
+   // Object with pretty printing
+   let obj = runtime.eval("({ name: 'Alice', age: 30 })")
+   try obj.jsonStringify(space: JavaScriptValue(runtime, 2))
+   // Returns:
+   // {
+   //   "name": "Alice",
+   //   "age": 30
+   // }
+
+   // Using a replacer to filter properties
+   let replacer = runtime.eval("['name']") // Only include 'name' property
+   try obj.jsonStringify(replacer: replacer) // {"name":"Alice"}
+
+   // Undefined returns nil
+   let undefined = JavaScriptValue.undefined()
+   try undefined.jsonStringify() // nil
+   ```
+
+   - Note: For simple values (undefined, null, boolean, number) that don't have an associated
+     runtime, this method can still produce a JSON representation without invoking JavaScript's
+     `JSON.stringify()`.
+
+   - SeeAlso: [MDN: JSON.stringify()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify)
    */
   public func jsonStringify(replacer: JavaScriptValue? = nil, space: JavaScriptValue? = nil) throws -> String? {
     guard let runtime else {
@@ -381,22 +433,45 @@ public final class JavaScriptValue: JavaScriptType, Escapable {
 
   // MARK: - Runtime-free initializers
 
+  /**
+   This is a lightweight way to create an undefined value that can be used in contexts
+   where a runtime is not available or needed. The resulting value can be passed to
+   JavaScript functions or used in comparisons.
+   */
   public static func undefined() -> JavaScriptValue {
     return JavaScriptValue(nil, facebook.jsi.Value.undefined())
   }
 
+  /**
+   This is a lightweight way to create a null value that can be used in contexts
+   where a runtime is not available or needed. The resulting value represents
+   JavaScript's `null`, which is distinct from `undefined`.
+   */
   public static func null() -> JavaScriptValue {
     return JavaScriptValue(nil, facebook.jsi.Value.null())
   }
 
+  /**
+   This is a lightweight way to create a boolean true value that can be used in contexts
+   where a runtime is not available or needed.
+   */
   public static func `true`() -> JavaScriptValue {
     return JavaScriptValue(nil, facebook.jsi.Value(true))
   }
 
+  /**
+   This is a lightweight way to create a boolean false value that can be used in contexts
+   where a runtime is not available or needed.
+   */
   public static func `false`() -> JavaScriptValue {
     return JavaScriptValue(nil, facebook.jsi.Value(false))
   }
 
+  /**
+   This is a lightweight way to create a numeric value that can be used in contexts
+   where a runtime is not available or needed. JavaScript numbers are represented
+   as double-precision floating-point values following the IEEE 754 standard.
+   */
   public static func number(_ number: Double) -> JavaScriptValue {
     return JavaScriptValue(nil, facebook.jsi.Value(number))
   }
