@@ -1,8 +1,11 @@
-// Copyright 2025-present 650 Industries. All rights reserved.
-
 internal import jsi
 
-public struct JSValuesBuffer: JavaScriptType, ~Copyable {
+/**
+ A buffer that stores instances of `facebook.jsi.Value` with the ability to convert them to `JavaScriptValue` on element access
+ without the need to create a new container (e.g. `std.vector<facebook.jsi.Value>` or `[JavaScriptValue]`).
+ Used mainly to pass function arguments from C++ to Swift.
+ */
+public struct JavaScriptValuesBuffer: JavaScriptType, ~Copyable {
   internal/*!*/ weak var runtime: JavaScriptRuntime?
   internal/*!*/ nonisolated(unsafe) let bufferPointer: UnsafeMutableBufferPointer<facebook.jsi.Value>
 
@@ -38,16 +41,16 @@ public struct JSValuesBuffer: JavaScriptType, ~Copyable {
     guard let runtime else {
       FatalError.runtimeLost()
     }
-    return JavaScriptValue(runtime, facebook.jsi.Value(runtime.pointee, bufferPointer[index]))
+    return JavaScriptValue(runtime, bufferPointer[index])
   }
 
   @discardableResult
-  internal consuming func set<T: JSIRepresentable>(value: borrowing T, atIndex index: Int) -> JSValuesBuffer where T: ~Copyable {
+  internal consuming func set<T: JSIRepresentable>(value: borrowing T, atIndex index: Int) -> JavaScriptValuesBuffer where T: ~Copyable {
     guard let jsiRuntime = runtime?.pointee else {
       FatalError.runtimeLost()
     }
-    guard index < count else {
-      fatalError("Cannot add values to a JSValuesBuffer beyond its capacity")
+    guard (0..<count).contains(index) else {
+      FatalError.valuesBufferIndexOutRange(index: index, capacity: count)
     }
     bufferPointer.initializeElement(at: index, to: value.toJSIValue(in: jsiRuntime))
     return self
@@ -65,20 +68,23 @@ public struct JSValuesBuffer: JavaScriptType, ~Copyable {
     return result
   }
 
+  /**
+   Allocates a new buffer of the same capacity with copies of `facebook.jsi.Value` it stores.
+   */
   @JavaScriptActor
-  public func copy() -> JSValuesBuffer {
+  public func copy() -> JavaScriptValuesBuffer {
     guard let runtime else {
       FatalError.runtimeLost()
     }
-    let bufferCopy = JSValuesBuffer.copying(in: runtime, buffer: bufferPointer)
-    return JSValuesBuffer(runtime, buffer: bufferCopy)
+    let bufferCopy = JavaScriptValuesBuffer.copying(in: runtime, buffer: bufferPointer)
+    return JavaScriptValuesBuffer(runtime, buffer: bufferCopy)
   }
 
   // MARK: - JavaScriptType
 
   public func asValue() -> JavaScriptValue {
-    // TODO: Should we return an array instead?
-    fatalError("JavaScriptValueBuffer cannot be represented as a single value")
+    // TODO: Should we return an array or array buffer instead?
+    FatalError.valuesBufferNotRepresentable()
   }
 
   // MARK: - Allocation
@@ -87,15 +93,15 @@ public struct JSValuesBuffer: JavaScriptType, ~Copyable {
    Allocates new values buffer with the given capacity. The buffer is in uninitialized state.
    You must initialize all elements using `set(value:atIndex)` method.
    */
-  public static func allocate(in runtime: JavaScriptRuntime, capacity: Int) -> JSValuesBuffer {
-    return JSValuesBuffer(runtime, buffer: UnsafeMutableBufferPointer<facebook.jsi.Value>.allocate(capacity: capacity))
+  public static func allocate(in runtime: JavaScriptRuntime, capacity: Int) -> JavaScriptValuesBuffer {
+    return JavaScriptValuesBuffer(runtime, buffer: UnsafeMutableBufferPointer<facebook.jsi.Value>.allocate(capacity: capacity))
   }
 
   /**
    Allocates new values buffer with the given JS representables.
    Note that parameter packs still do not support non-copyable types so they need to be passed as `JavaScriptRef`.
    */
-  public static func allocate<each T: JSRepresentable>(in runtime: JavaScriptRuntime, with values: repeat each T) -> JSValuesBuffer {
+  public static func allocate<each T: JSRepresentable>(in runtime: JavaScriptRuntime, with values: repeat each T) -> JavaScriptValuesBuffer {
     // First we count parameters in a pack to find the proper buffer capacity. This is still the simplest way.
     var capacity = 0
     for _ in repeat each values {
@@ -115,19 +121,7 @@ public struct JSValuesBuffer: JavaScriptType, ~Copyable {
       }
       index += 1
     }
-    return JSValuesBuffer(runtime, buffer: buffer)
-  }
-
-  public static func allocate<RefType: JSRepresentable & ~Copyable>(in runtime: JavaScriptRuntime, refs: [JavaScriptRef<RefType>]) -> JSValuesBuffer {
-    let buffer = UnsafeMutableBufferPointer<facebook.jsi.Value>.allocate(capacity: refs.count)
-    for (index, ref) in refs.enumerated() {
-      if let value = ref.take() {
-        buffer.initializeElement(at: index, to: value.toJSValue(in: runtime).toJSIValue(in: runtime.pointee))
-      } else {
-        buffer.initializeElement(at: index, to: .undefined())
-      }
-    }
-    return JSValuesBuffer(runtime, buffer: buffer)
+    return JavaScriptValuesBuffer(runtime, buffer: buffer)
   }
 
   internal static func copying(in runtime: JavaScriptRuntime, buffer: UnsafeMutableBufferPointer<facebook.jsi.Value>) -> UnsafeMutableBufferPointer<facebook.jsi.Value> {

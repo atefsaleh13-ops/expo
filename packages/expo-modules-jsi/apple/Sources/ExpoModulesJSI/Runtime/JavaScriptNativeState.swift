@@ -4,7 +4,7 @@ internal import ExpoModulesJSI_Cxx
 /**
  Base class for JS object's native state.
  */
-open class NativeState {
+open class JavaScriptNativeState {
   internal private(set) var pointee: expo.NativeState?
 
   public init() {
@@ -14,7 +14,7 @@ open class NativeState {
     // Function called when the underlying `expo.NativeState` deallocates,
     // e.g. when all JS objects using this native state gets garbage collected.
     func deallocate(context: UnsafeMutableRawPointer) {
-      let unmanagedContext = Unmanaged<NativeState>.fromOpaque(context)
+      let unmanagedContext = Unmanaged<JavaScriptNativeState>.fromOpaque(context)
       let nativeState = unmanagedContext.takeUnretainedValue()
 
       // Release both C++ instance and unmanaged reference.
@@ -41,7 +41,7 @@ open class NativeState {
     // Get the opaque pointer stored by the C++ native state.
     let context = nativeState.getContext()
     // Turn it to unmanaged reference to base `NativeState` type as `fromOpaque` may crash for unrelated types.
-    let value = Unmanaged<NativeState>.fromOpaque(context).takeUnretainedValue()
+    let value = Unmanaged<JavaScriptNativeState>.fromOpaque(context).takeUnretainedValue()
     // Then try to cast it to the proper type.
     return value as? Self
   }

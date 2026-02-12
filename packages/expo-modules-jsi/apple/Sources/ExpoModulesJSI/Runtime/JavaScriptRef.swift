@@ -80,7 +80,7 @@ public final class JavaScriptRef<T: JavaScriptType & ~Copyable>: JavaScriptType,
 extension JavaScriptRef: JSRepresentable where T: JSRepresentable & ~Copyable {}
 extension JavaScriptRef: JSIRepresentable where T: JSIRepresentable & ~Copyable {
   static func fromJSIValue(_ value: borrowing facebook.jsi.Value, in runtime: facebook.jsi.Runtime) -> JavaScriptRef {
-    fatalError("Unimplemented")
+    FatalError.unimplemented()
   }
 
   func toJSIValue(in runtime: facebook.jsi.Runtime) -> facebook.jsi.Value {

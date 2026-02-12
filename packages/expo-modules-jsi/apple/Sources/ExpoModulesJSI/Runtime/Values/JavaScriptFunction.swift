@@ -21,7 +21,7 @@ public struct JavaScriptFunction: JavaScriptType, ~Copyable {
    Calls the function with the given `this` object and buffer of arguments.
    */
   @discardableResult
-  public func call(this: borrowing JavaScriptObject, arguments: consuming JSValuesBuffer? = nil) throws -> JavaScriptValue {
+  public func call(this: borrowing JavaScriptObject, arguments: consuming JavaScriptValuesBuffer? = nil) throws -> JavaScriptValue {
     guard let runtime else {
       FatalError.runtimeLost()
     }
@@ -34,7 +34,7 @@ public struct JavaScriptFunction: JavaScriptType, ~Copyable {
    Calls the function with the given buffer of arguments.
    */
   @discardableResult
-  public func call(arguments: consuming JSValuesBuffer? = nil) throws -> JavaScriptValue {
+  public func call(arguments: consuming JavaScriptValuesBuffer? = nil) throws -> JavaScriptValue {
     guard let runtime else {
       FatalError.runtimeLost()
     }
@@ -51,7 +51,7 @@ public struct JavaScriptFunction: JavaScriptType, ~Copyable {
     guard let runtime else {
       FatalError.runtimeLost()
     }
-    let argumentsBuffer = JSValuesBuffer.allocate(in: runtime, with: repeat each arguments)
+    let argumentsBuffer = JavaScriptValuesBuffer.allocate(in: runtime, with: repeat each arguments)
     return try self.call(this: this, arguments: argumentsBuffer)
   }
 
@@ -63,14 +63,14 @@ public struct JavaScriptFunction: JavaScriptType, ~Copyable {
     guard let runtime else {
       FatalError.runtimeLost()
     }
-    let argumentsBuffer = JSValuesBuffer.allocate(in: runtime, with: repeat each arguments)
+    let argumentsBuffer = JavaScriptValuesBuffer.allocate(in: runtime, with: repeat each arguments)
     return try self.call(arguments: argumentsBuffer)
   }
 
   /**
    Calls the function as a constructor with the given buffer of arguments. It's like calling a function with the `new` keyword.
    */
-  public func callAsConstructor(_ arguments: consuming JSValuesBuffer? = nil) throws -> JavaScriptValue {
+  public func callAsConstructor(_ arguments: consuming JavaScriptValuesBuffer? = nil) throws -> JavaScriptValue {
     guard let runtime else {
       FatalError.runtimeLost()
     }
@@ -87,7 +87,7 @@ public struct JavaScriptFunction: JavaScriptType, ~Copyable {
     guard let runtime else {
       FatalError.runtimeLost()
     }
-    let argumentsBuffer = JSValuesBuffer.allocate(in: runtime, with: repeat each arguments)
+    let argumentsBuffer = JavaScriptValuesBuffer.allocate(in: runtime, with: repeat each arguments)
     return try callAsConstructor(argumentsBuffer)
   }
 
@@ -131,7 +131,7 @@ extension JavaScriptFunction: JSRepresentable {
 
 extension JavaScriptFunction: JSIRepresentable {
   static func fromJSIValue(_ value: borrowing facebook.jsi.Value, in runtime: facebook.jsi.Runtime) -> JavaScriptFunction {
-    fatalError("Unimplemented")
+    FatalError.unimplemented()
   }
 
   func toJSIValue(in runtime: facebook.jsi.Runtime) -> facebook.jsi.Value {

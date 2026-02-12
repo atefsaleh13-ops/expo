@@ -29,14 +29,14 @@ public extension JSRepresentable {
     if let JSIRepresentableType = Self.self as? JSIRepresentable.Type {
       return JSIRepresentableType.fromJSIValue(value.pointee, in: jsiRuntime.pointee) as! Self
     }
-    fatalError("Unimplemented")
+    FatalError.unimplemented()
   }
 
   func toJSValue(in runtime: JavaScriptRuntime) -> JavaScriptValue {
     if let self = self as? JSIRepresentable {
       return JavaScriptValue(runtime, self.toJSIValue(in: runtime.pointee))
     }
-    fatalError("Unimplemented")
+    FatalError.unimplemented()
   }
 }
 
@@ -58,11 +58,11 @@ internal protocol JSIRepresentable: JSRepresentable, Sendable, ~Copyable {
 
 internal extension JSIRepresentable {
   static func fromJSIValue(_ value: borrowing facebook.jsi.Value, in runtime: facebook.jsi.Runtime) -> Self {
-    fatalError("Unimplemented")
+    FatalError.unimplemented()
   }
 
   func toJSIValue(in runtime: facebook.jsi.Runtime) -> facebook.jsi.Value {
-    fatalError("Unimplemented")
+    FatalError.unimplemented()
   }
 }
 

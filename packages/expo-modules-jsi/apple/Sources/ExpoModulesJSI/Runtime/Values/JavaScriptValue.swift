@@ -1,8 +1,12 @@
-// Copyright 2025-present 650 Industries. All rights reserved.
-
 internal import jsi
 internal import ExpoModulesJSI_Cxx
 
+/**
+ Represents any JS value (undefined, null, boolean, number, symbol, string, or object).
+ As opposed to other concrete types (e.g. `JavaScriptObject`, `JavaScriptFunction`),
+ this one is a reference type so can be safely captured in closures, passed to other isolation context,
+ and stored in containers that don't support non-copyable types etc.
+ */
 public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error {
   internal weak let runtime: JavaScriptRuntime?
   internal let pointee: facebook.jsi.Value
@@ -155,7 +159,7 @@ public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error 
         return result
       }
       if object.isFunction() {
-        fatalError("Unimplemented")
+        FatalError.unimplemented()
       }
       var result = [String: Any]()
 
@@ -521,7 +525,7 @@ extension JavaScriptValue: JSRepresentable {
 
 extension JavaScriptValue: JSIRepresentable {
   static func fromJSIValue(_ value: borrowing facebook.jsi.Value, in runtime: facebook.jsi.Runtime) -> JavaScriptValue {
-    fatalError("Unimplemented")
+    FatalError.unimplemented()
   }
 
   func toJSIValue(in runtime: facebook.jsi.Runtime) -> facebook.jsi.Value {

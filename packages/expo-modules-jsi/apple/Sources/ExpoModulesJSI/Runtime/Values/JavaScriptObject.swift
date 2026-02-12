@@ -267,7 +267,7 @@ public struct JavaScriptObject: JavaScriptType, Sendable, ~Copyable {
    Returns a native state previously set by `setNativeState`.
    If `hasNativeState()` is false or object's native state is of unrelated type, this will return `nil`.
    */
-  public func getNativeState<T: NativeState>(as: T.Type = NativeState.self) -> T? {
+  public func getNativeState<T: JavaScriptNativeState>(as: T.Type = JavaScriptNativeState.self) -> T? {
     guard let cxxNativeState = expo.getNativeState(runtime.pointee, pointee) else {
       return nil
     }
@@ -279,9 +279,9 @@ public struct JavaScriptObject: JavaScriptType, Sendable, ~Copyable {
    Creates a new shared_ptr to the object managed by state, which will live until the value at this property becomes unreachable.
    - TODO: throw a type error if this object is a proxy or host object.
    */
-  public func setNativeState<T: NativeState>(_ nativeState: T) {
+  public func setNativeState<T: JavaScriptNativeState>(_ nativeState: T) {
     guard let nativeStatePointee = nativeState.pointee else {
-      fatalError("Native state is already released")
+      FatalError.nativeStateReleased()
     }
     expo.setNativeState(runtime.pointee, pointee, nativeStatePointee)
   }
@@ -437,7 +437,7 @@ extension JavaScriptObject: JSRepresentable {
 
 extension JavaScriptObject: JSIRepresentable {
   static func fromJSIValue(_ value: borrowing facebook.jsi.Value, in runtime: facebook.jsi.Runtime) -> JavaScriptObject {
-    fatalError("Unimplemented")
+    FatalError.unimplemented()
   }
 
   func toJSIValue(in runtime: facebook.jsi.Runtime) -> facebook.jsi.Value {

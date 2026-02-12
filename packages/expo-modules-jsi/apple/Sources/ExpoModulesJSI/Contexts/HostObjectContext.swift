@@ -1,7 +1,7 @@
 /**
  Context that captures Swift types to pass them to JSI host object as an unmanaged pointer for interoperability with C++.
  */
-internal class HostObjectContext {
+internal final class HostObjectContext {
   let runtime: JavaScriptRuntime
   let get: (String) -> JavaScriptValue
   let set: (String, JavaScriptValue) -> Void

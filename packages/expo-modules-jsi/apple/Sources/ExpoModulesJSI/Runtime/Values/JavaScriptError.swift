@@ -38,7 +38,7 @@ public struct ScriptEvaluationError: Error {
 
 extension JavaScriptError: JSRepresentable {
   public static func fromJSValue(_ value: JavaScriptValue) -> JavaScriptError {
-    fatalError("Unimplemented")
+    FatalError.unimplemented()
   }
 
   public func toJSValue(in runtime: JavaScriptRuntime) -> JavaScriptValue {
@@ -48,7 +48,7 @@ extension JavaScriptError: JSRepresentable {
 
 extension JavaScriptError: JSIRepresentable {
   static func fromJSIValue(_ value: borrowing facebook.jsi.Value, in runtime: facebook.jsi.Runtime) -> JavaScriptError {
-    fatalError("Unimplemented")
+    FatalError.unimplemented()
   }
 
   func toJSIValue(in runtime: facebook.jsi.Runtime) -> facebook.jsi.Value {

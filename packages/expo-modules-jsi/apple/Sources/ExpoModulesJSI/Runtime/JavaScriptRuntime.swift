@@ -146,7 +146,7 @@ open class JavaScriptRuntime: Equatable, @unchecked Sendable {
    */
   public typealias SyncFunctionClosure = @JavaScriptActor (
     _ this: JavaScriptValue,
-    _ arguments: consuming JSValuesBuffer
+    _ arguments: consuming JavaScriptValuesBuffer
   ) throws -> JavaScriptValue
 
   /**
@@ -200,7 +200,7 @@ open class JavaScriptRuntime: Equatable, @unchecked Sendable {
    */
   public typealias AsyncFunctionClosure = @JavaScriptActor (
     _ this: JavaScriptValue,
-    _ arguments: consuming JSValuesBuffer,
+    _ arguments: consuming JavaScriptValuesBuffer,
   ) async throws -> JavaScriptValue
 
   /**
@@ -419,7 +419,7 @@ private func createFunctionClosure(runtime: JavaScriptRuntime, name: String, _ c
   func call(context: UnsafeMutableRawPointer, thisPtr: UnsafePointer<facebook.jsi.Value>, argumentsPtr: UnsafePointer<facebook.jsi.Value>, argumentsCount: Int) -> facebook.jsi.Value {
     let context = Unmanaged<HostFunctionContext>.fromOpaque(context).takeUnretainedValue()
     let this = UnsafeMutablePointer(mutating: thisPtr).move()
-    let argumentsRef = JSValuesBuffer(context.runtime, start: argumentsPtr, count: argumentsCount).ref()
+    let argumentsRef = JavaScriptValuesBuffer(context.runtime, start: argumentsPtr, count: argumentsCount).ref()
 
     return JavaScriptActor.assumeIsolated {
       do {
@@ -438,16 +438,4 @@ private func createFunctionClosure(runtime: JavaScriptRuntime, name: String, _ c
   }
 
   return expo.HostFunctionClosure(context, call, deallocate)
-}
-
-internal final class HostFunctionContext: Sendable {
-  let runtime: JavaScriptRuntime
-  let name: String
-  let call: JavaScriptRuntime.SyncFunctionClosure
-
-  init(runtime: JavaScriptRuntime, name: String, _ function: @escaping JavaScriptRuntime.SyncFunctionClosure) {
-    self.runtime = runtime
-    self.name = name
-    self.call = function
-  }
 }
