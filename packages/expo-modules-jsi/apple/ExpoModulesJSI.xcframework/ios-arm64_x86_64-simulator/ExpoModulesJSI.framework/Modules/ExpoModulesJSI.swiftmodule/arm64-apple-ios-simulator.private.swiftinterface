@@ -113,6 +113,7 @@ public struct JavaScriptObject : ExpoModulesJSI.JavaScriptType, Swift.Sendable, 
   public func isFunction() -> Swift.Bool
   public func isArrayBuffer() -> Swift.Bool
   public func getArray() -> ExpoModulesJSI.JavaScriptArray
+  public func getFunction() -> ExpoModulesJSI.JavaScriptFunction
   public func hasProperty(_ name: Swift.String) -> Swift.Bool
   public func getProperty(_ name: Swift.String) -> ExpoModulesJSI.JavaScriptValue
   public subscript(key: Swift.String, nestedKeys: Swift.String...) -> ExpoModulesJSI.JavaScriptValue {
@@ -144,6 +145,7 @@ public struct JavaScriptObject : ExpoModulesJSI.JavaScriptType, Swift.Sendable, 
   public func unsetNativeState()
   public func setObjectDeallocator(_ deallocator: @escaping () -> Swift.Void)
   public func setExternalMemoryPressure(_ size: Swift.Int)
+  public static func == (lhs: borrowing ExpoModulesJSI.JavaScriptObject, rhs: borrowing ExpoModulesJSI.JavaScriptObject) -> Swift.Bool
   public struct PropertyOptions : Swift.OptionSet, Swift.Sendable {
     public let rawValue: Swift.Int
     public init(rawValue: Swift.Int)
@@ -173,7 +175,7 @@ public struct JavaScriptPromise : ExpoModulesJSI.JavaScriptType, ~Swift.Copyable
   }
   @ExpoModulesJSI.JavaScriptActor public func await() async throws -> ExpoModulesJSI.JavaScriptValue
   public func asValue() -> ExpoModulesJSI.JavaScriptValue
-  public func resolve(_ result: ExpoModulesJSI.JavaScriptValue)
+  public func resolve<V>(_ value: V) where V : ExpoModulesJSI.JSRepresentable
   public func reject(_ error: any Swift.Error)
 }
 final public class JavaScriptRef<T> : ExpoModulesJSI.JavaScriptType, Swift.Sendable, Swift.Copyable, Swift.Escapable where T : ExpoModulesJSI.JavaScriptType, T : ~Copyable {
@@ -343,7 +345,7 @@ public struct JavaScriptTypedArray : ~Swift.Copyable {
   public let length: Swift.Int
   public func getProperty(_ name: Swift.String) -> ExpoModulesJSI.JavaScriptValue
 }
-@_hasMissingDesignatedInitializers final public class JavaScriptValue : ExpoModulesJSI.JavaScriptType, Swift.Escapable {
+@_hasMissingDesignatedInitializers final public class JavaScriptValue : ExpoModulesJSI.JavaScriptType, Swift.Escapable, Swift.Error {
   public init(_ runtime: ExpoModulesJSI.JavaScriptRuntime, _ bool: Swift.Bool)
   public init(_ runtime: ExpoModulesJSI.JavaScriptRuntime, _ value: any ExpoModulesJSI.JSRepresentable)
   final public func copy() -> ExpoModulesJSI.JavaScriptValue
@@ -364,10 +366,10 @@ public struct JavaScriptTypedArray : ~Swift.Copyable {
   final public func getDouble() -> Swift.Double
   final public func getString() -> Swift.String
   final public func getObject() -> ExpoModulesJSI.JavaScriptObject
+  final public func getArray() -> ExpoModulesJSI.JavaScriptArray
   final public func getFunction() -> ExpoModulesJSI.JavaScriptFunction
-  #if compiler(>=5.3) && $NonescapableTypes
-  final public func getTypedArray() -> ExpoModulesJSI.JavaScriptTypedArray?
-  #endif
+  final public func getTypedArray() -> ExpoModulesJSI.JavaScriptTypedArray
+  @ExpoModulesJSI.JavaScriptActor final public func getPromise() throws -> ExpoModulesJSI.JavaScriptPromise
   final public func toString() -> Swift.String
   #if compiler(>=5.3) && $NonescapableTypes
   final public func jsonStringify(replacer: ExpoModulesJSI.JavaScriptValue? = nil, space: ExpoModulesJSI.JavaScriptValue? = nil) throws -> Swift.String?

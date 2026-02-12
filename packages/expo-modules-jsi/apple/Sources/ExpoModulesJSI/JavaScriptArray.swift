@@ -10,7 +10,7 @@ public struct JavaScriptArray: JavaScriptType, ~Copyable {
   internal weak var runtime: JavaScriptRuntime?
   internal let pointee: facebook.jsi.Array
 
-  internal init(runtime: JavaScriptRuntime, pointee: consuming facebook.jsi.Array) {
+  internal init(_ runtime: JavaScriptRuntime, _ pointee: consuming facebook.jsi.Array) {
     self.runtime = runtime
     self.pointee = pointee
   }
@@ -81,7 +81,7 @@ public struct JavaScriptArray: JavaScriptType, ~Copyable {
    - Returns: A `JavaScriptValue` representing this array
    - Note: The returned value maintains a reference to the same underlying JavaScript
      array, so modifications to the array in JavaScript will be reflected in the value.
-   - SeeAlso: `JavaScriptValue.getObject().getArray()` for the inverse operation
+   - SeeAlso: `JavaScriptValue.getArray()` for the inverse operation
    */
   public func asValue() -> JavaScriptValue {
     guard let runtime else {

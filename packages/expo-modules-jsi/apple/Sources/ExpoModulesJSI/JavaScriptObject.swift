@@ -53,10 +53,16 @@ public struct JavaScriptObject: JavaScriptType, Sendable, ~Copyable {
     return instanceOf(constructor.getFunction())
   }
 
+  /**
+   Equivalent to `Array.isArray()` in JS. If it returns `true`, then `getArray()` will succeed.
+   */
   public func isArray() -> Bool {
     return pointee.isArray(runtime.pointee)
   }
 
+  /**
+   Returns `true` if the object is callable. If so, then `getFunction()` will succeed.
+   */
   public func isFunction() -> Bool {
     return pointee.isFunction(runtime.pointee)
   }
@@ -70,8 +76,17 @@ public struct JavaScriptObject: JavaScriptType, Sendable, ~Copyable {
     return pointee.isArrayBuffer(runtime.pointee)
   }
 
+  /**
+   Returns the object as an array, or asserts if not an array.
+   */
   public func getArray() -> JavaScriptArray {
-    return JavaScriptArray(runtime: runtime, pointee: pointee.getArray(runtime.pointee))
+    assert(isArray(), "Object is not an array")
+    return JavaScriptArray(runtime, pointee.getArray(runtime.pointee))
+  }
+
+  public func getFunction() -> JavaScriptFunction {
+    assert(isFunction(), "Object is not a function")
+    return JavaScriptFunction(runtime, pointee.getFunction(runtime.pointee))
   }
 
   // MARK: - Accessing object properties
@@ -288,6 +303,17 @@ public struct JavaScriptObject: JavaScriptType, Sendable, ~Copyable {
 
   public func setExternalMemoryPressure(_ size: Int) {
     pointee.setExternalMemoryPressure(runtime.pointee, size)
+  }
+
+  // MARK: - Equality
+
+  /**
+   Compares whether the two `JavaScriptObject`s are pointing to the same underlying JS object.
+   */
+  public static func == (lhs: borrowing JavaScriptObject, rhs: borrowing JavaScriptObject) -> Bool {
+    // Note that we implement comparison operator, but we don't add conformance to `Equatable` because it requires types to be copyable.
+    // This proposal solves it: https://github.com/swiftlang/swift-evolution/blob/main/proposals/0499-support-non-copyable-simple-protocols.md
+    return lhs.asValue() == rhs.asValue()
   }
 
   // MARK: - Property options and descriptor

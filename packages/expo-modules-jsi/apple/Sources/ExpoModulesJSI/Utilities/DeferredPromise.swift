@@ -1,21 +1,19 @@
 internal actor DeferredPromise {
-  internal typealias Value = JavaScriptValue.Ref
-
   internal enum State {
-    case pending(CheckedContinuation<Value, Never>?)
-    case fulfilled(Value)
-    case rejected(Value)
+    case pending(CheckedContinuation<JavaScriptValue, Never>?)
+    case fulfilled(JavaScriptValue)
+    case rejected(JavaScriptValue)
   }
 
   internal var state: State = .pending(nil)
 
-  public func getValue() async throws -> sending Value {
+  public func getValue() async throws(JavaScriptValue) -> sending JavaScriptValue {
     switch state {
     case .fulfilled(let value):
       return value
 
     case .rejected(let error):
-      return error
+      throw error
 
     case .pending(nil):
       return await withCheckedContinuation { continuation in
@@ -27,7 +25,7 @@ internal actor DeferredPromise {
     }
   }
 
-  internal func resolve(_ value: sending Value) {
+  internal func resolve(_ value: sending JavaScriptValue) {
     switch state {
     case .pending(let continuation?):
       continuation.resume(returning: value)
@@ -41,7 +39,7 @@ internal actor DeferredPromise {
     }
   }
 
-  internal func reject(_ error: sending Value) {
+  internal func reject(_ error: sending JavaScriptValue) {
     switch state {
     case .pending(let continuation?):
       continuation.resume(returning: error)

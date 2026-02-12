@@ -403,12 +403,7 @@ open class JavaScriptRuntime: Equatable, @unchecked Sendable {
   @JavaScriptActor
   public func evalAsync(label: String? = nil, _ source: String) async throws -> JavaScriptValue {
     let result = try eval(label: label, source)
-
-    if result.is("Promise") {
-      let promise = JavaScriptPromise(self, result.getObject())
-      return try await promise.await()
-    }
-    return result
+    return result.is("Promise") ? try await result.getPromise().await() : result
   }
 
   // MARK: - Equatable

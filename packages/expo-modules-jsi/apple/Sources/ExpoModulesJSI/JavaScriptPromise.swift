@@ -29,25 +29,7 @@ public struct JavaScriptPromise: JavaScriptType, ~Copyable {
   public init(_ runtime: JavaScriptRuntime, _ object: consuming JavaScriptObject) {
     self.runtime = runtime
     self.object = object
-
-    let deferredPromise = self.deferredPromise
-
-    let onFulfilled = runtime.createSyncFunction("onFulfilled") { this, arguments in
-      let value = arguments[0].ref()
-      Task.immediate_polyfill {
-        await deferredPromise.resolve(value)
-      }
-      return .undefined()
-    }
-    let onRejected = runtime.createSyncFunction("onRejected") { this, arguments in
-      let error = arguments[0].ref()
-      Task.immediate_polyfill {
-        await deferredPromise.reject(error)
-      }
-      return .undefined()
-    }
-
-    try! self.object.callFunction("then", arguments: onFulfilled.ref(), onRejected.ref())
+    try! setUpCallbacks()
   }
 
   /**
@@ -69,6 +51,8 @@ public struct JavaScriptPromise: JavaScriptType, ~Copyable {
       .getPropertyAsFunction("Promise")
       .callAsConstructor(setup.asValue())
       .getObject()
+
+    try! setUpCallbacks()
   }
 
   @JavaScriptActor
@@ -83,14 +67,14 @@ public struct JavaScriptPromise: JavaScriptType, ~Copyable {
 
   @JavaScriptActor
   public func `await`() async throws -> JavaScriptValue {
-    return try await deferredPromise.getValue().take()
+    return try await deferredPromise.getValue()
   }
 
   public func asValue() -> JavaScriptValue {
     return object.asValue()
   }
 
-  public func resolve(_ result: JavaScriptValue) {
+  public func resolve<V: JSRepresentable>(_ value: V) {
     guard let runtime else {
       return
     }
@@ -102,7 +86,7 @@ public struct JavaScriptPromise: JavaScriptType, ~Copyable {
     runtime.schedule(priority: .immediate) { [resolveFunction, rejectFunction] in
       // Call the actual resolver given in the Promise setup.
       // This will also call `deferredPromise.resolve` in the `then` handler.
-      _ = try! resolveFunction.take().getFunction().call(arguments: result)
+      _ = try! resolveFunction.take().getFunction().call(arguments: value)
 
       // Release the rejecter, we cannot call it anymore.
       rejectFunction.release()
@@ -129,5 +113,27 @@ public struct JavaScriptPromise: JavaScriptType, ~Copyable {
       // Release the resolver, we cannot call it anymore.
       resolveFunction.release()
     }
+  }
+
+  @JavaScriptActor
+  private func setUpCallbacks() throws {
+    guard let runtime else {
+      return
+    }
+    let onFulfilled = runtime.createSyncFunction("onFulfilled") { [deferredPromise] this, arguments in
+      let value = arguments[0]
+      Task.immediate_polyfill {
+        await deferredPromise.resolve(value)
+      }
+      return .undefined()
+    }
+    let onRejected = runtime.createSyncFunction("onRejected") { [deferredPromise] this, arguments in
+      let error = arguments[0]
+      Task.immediate_polyfill {
+        await deferredPromise.reject(error)
+      }
+      return .undefined()
+    }
+    try object.callFunction("then", arguments: onFulfilled.asValue(), onRejected.asValue())
   }
 }

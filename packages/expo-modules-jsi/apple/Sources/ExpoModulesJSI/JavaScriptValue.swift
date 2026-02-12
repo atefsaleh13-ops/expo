@@ -3,7 +3,7 @@
 internal import jsi
 internal import ExpoModulesJSI_Cxx
 
-public final class JavaScriptValue: JavaScriptType, Escapable {
+public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error {
   internal weak let runtime: JavaScriptRuntime?
   internal let pointee: facebook.jsi.Value
 
@@ -215,6 +215,17 @@ public final class JavaScriptValue: JavaScriptType, Escapable {
   }
 
   /**
+   Returns the value as an array, or asserts if not an array.
+   */
+  public func getArray() -> JavaScriptArray {
+    guard let runtime else {
+      JS.runtimeLostFatalError()
+    }
+    assert(isArray(), "Value is not an array")
+    return JavaScriptArray(runtime, pointee.getObject(runtime.pointee).getArray(runtime.pointee))
+  }
+
+  /**
    Returns the value as a function, or asserts if not a function.
    */
   public func getFunction() -> JavaScriptFunction {
@@ -228,14 +239,24 @@ public final class JavaScriptValue: JavaScriptType, Escapable {
   /**
    Returns the value as a typed array, or asserts if it is not a typed array.
    */
-  public func getTypedArray() -> JavaScriptTypedArray? {
+  public func getTypedArray() -> JavaScriptTypedArray {
     guard let runtime else {
       JS.runtimeLostFatalError()
     }
-    guard isTypedArray() else {
-      return nil
-    }
+    assert(isTypedArray(), "Value is not a typed array")
     return JavaScriptTypedArray(runtime, expo.TypedArray(runtime.pointee, pointee.getObject(runtime.pointee)))
+  }
+
+  /**
+   Returns the value as a promise, or asserts if it is not a promise.
+   */
+  @JavaScriptActor
+  public func getPromise() throws -> JavaScriptPromise {
+    guard let runtime else {
+      JS.runtimeLostFatalError()
+    }
+    assert(self.is("Promise"), "Value is not a promise")
+    return JavaScriptPromise(runtime, getObject())
   }
 
   /**
@@ -419,8 +440,6 @@ public final class JavaScriptValue: JavaScriptType, Escapable {
    Same as `isEqual(to:)`.
    */
   public static func == (lhs: JavaScriptValue, rhs: JavaScriptValue) -> Bool {
-    // Note that we implement comparison operator, but we don't add conformance to `Equatable` because it requires types to be copyable.
-    // This proposal solves it: https://github.com/swiftlang/swift-evolution/blob/main/proposals/0499-support-non-copyable-simple-protocols.md
     return lhs.isEqual(to: rhs)
   }
 

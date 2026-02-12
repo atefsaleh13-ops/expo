@@ -67,13 +67,15 @@ public class AsyncFunctionDefinition<Args, FirstArgType, ReturnType>: AnyAsyncFu
   @JavaScriptActor
   func call(_ appContext: AppContext, this: borrowing JavaScriptValue, arguments: consuming JSValuesBuffer, callback: @Sendable @escaping (consuming FunctionCallResult) -> Void) {
     let promise = Promise(appContext: appContext) { value in
-      do {
-        let jsValue = try appContext.converter.toJS(value, ~ReturnType.self)
-        callback(.success(jsValue.ref()))
-      } catch let error as Exception {
-        callback(.failure(error))
-      } catch {
-        callback(.failure(UnexpectedException(error)))
+      try? appContext.runtime.schedule(priority: .immediate) {
+        do {
+          let jsValue = try appContext.converter.toJS(value, ~ReturnType.self)
+          callback(.success(jsValue.ref()))
+        } catch let error as Exception {
+          callback(.failure(error))
+        } catch {
+          callback(.failure(UnexpectedException(error)))
+        }
       }
     } rejecter: { exception in
       callback(.failure(exception))
