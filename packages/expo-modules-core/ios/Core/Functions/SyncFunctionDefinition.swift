@@ -12,7 +12,7 @@ internal protocol AnySyncFunctionDefinition: AnyFunctionDefinition, ~Copyable {
    */
   @discardableResult
   @JavaScriptActor
-  func call(_ appContext: AppContext, this: borrowing JavaScriptValue, arguments: consuming JSValuesBuffer) throws(Exception) -> JavaScriptValue
+  func call(_ appContext: AppContext, this: borrowing JavaScriptValue, arguments: consuming JavaScriptValuesBuffer) throws(Exception) -> JavaScriptValue
 }
 
 /**
@@ -56,7 +56,7 @@ public class SyncFunctionDefinition<Args, FirstArgType, ReturnType>: AnySyncFunc
   // MARK: - AnySyncFunctionDefinition
 
   @JavaScriptActor
-  func call(_ appContext: AppContext, this: borrowing JavaScriptValue, arguments: consuming JSValuesBuffer) throws(Exception) -> JavaScriptValue {
+  func call(_ appContext: AppContext, this: borrowing JavaScriptValue, arguments: consuming JavaScriptValuesBuffer) throws(Exception) -> JavaScriptValue {
     do {
       try validateArgumentsNumber(function: self, received: arguments.count)
       let nativeArguments = try toNativeClosureArguments(converter: appContext.converter, fn: self, this: this, arguments: arguments)
@@ -74,7 +74,7 @@ public class SyncFunctionDefinition<Args, FirstArgType, ReturnType>: AnySyncFunc
     }
   }
 
-//  func call(_ appContext: AppContext, this: borrowing JavaScriptValue, arguments: consuming JSValuesBuffer, callback: @escaping @Sendable (consuming FunctionCallResult) -> Void) {
+//  func call(_ appContext: AppContext, this: borrowing JavaScriptValue, arguments: consuming JavaScriptValuesBuffer, callback: @escaping @Sendable (consuming FunctionCallResult) -> Void) {
 //    do {
 //      callback(.success(try call(appContext, this: this, arguments: arguments)))
 //    } catch let error {
@@ -104,7 +104,7 @@ internal func toNativeClosureArguments(
   converter: MainValueConverter,
   fn: AnyFunctionDefinition,
   this: borrowing JavaScriptValue,
-  arguments: borrowing JSValuesBuffer,
+  arguments: borrowing JavaScriptValuesBuffer,
 ) throws -> [Any] {
   // This array will include the owner (if needed) and function arguments.
   var nativeArguments: [Any] = []

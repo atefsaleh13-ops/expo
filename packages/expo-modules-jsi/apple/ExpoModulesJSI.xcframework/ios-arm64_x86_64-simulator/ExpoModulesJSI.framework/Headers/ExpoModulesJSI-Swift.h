@@ -591,15 +591,11 @@ struct TypeMetadataTrait<swift::UInt> {
 namespace ExpoModulesJSI SWIFT_PRIVATE_ATTR SWIFT_SYMBOL_MODULE("ExpoModulesJSI") {
 
 
-class JS { } SWIFT_UNAVAILABLE_MSG("Swift struct 'JS' cannot be represented in C++");
-
 template<class T_0_0>
 #ifdef __cpp_concepts
 requires swift::isUsableInGenericContext<T_0_0>
 #endif // __cpp_concepts
 class JSRepresentable { } SWIFT_UNAVAILABLE_MSG("protocol 'JSRepresentable' can not yet be represented in C++");
-
-class JSValuesBuffer { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JSValuesBuffer' can not yet be represented in C++");
 
 class JavaScriptActor { } SWIFT_UNAVAILABLE_MSG("Swift actor 'JavaScriptActor' cannot be represented in C++");
 
@@ -610,6 +606,8 @@ class JavaScriptError { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptE
 class JavaScriptFunction { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptFunction' can not yet be represented in C++");
 
 class JavaScriptHostObject { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptHostObject' can not yet be represented in C++");
+
+class JavaScriptNativeState { } SWIFT_UNAVAILABLE_MSG("Swift class 'JavaScriptNativeState' cannot be represented in C++");
 
 class JavaScriptObject { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptObject' can not yet be represented in C++");
 
@@ -633,9 +631,9 @@ class JavaScriptTypedArray { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaSc
 
 class JavaScriptValue { } SWIFT_UNAVAILABLE_MSG("Swift class 'JavaScriptValue' cannot be represented in C++");
 
-class JavaScriptWeakObject { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptWeakObject' can not yet be represented in C++");
+class JavaScriptValuesBuffer { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptValuesBuffer' can not yet be represented in C++");
 
-class NativeState { } SWIFT_UNAVAILABLE_MSG("Swift class 'NativeState' cannot be represented in C++");
+class JavaScriptWeakObject { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptWeakObject' can not yet be represented in C++");
 
 class ScriptEvaluationError { } SWIFT_UNAVAILABLE_MSG("Swift struct 'ScriptEvaluationError' cannot be represented in C++");
 
@@ -1239,15 +1237,11 @@ struct TypeMetadataTrait<swift::UInt> {
 namespace ExpoModulesJSI SWIFT_PRIVATE_ATTR SWIFT_SYMBOL_MODULE("ExpoModulesJSI") {
 
 
-class JS { } SWIFT_UNAVAILABLE_MSG("Swift struct 'JS' cannot be represented in C++");
-
 template<class T_0_0>
 #ifdef __cpp_concepts
 requires swift::isUsableInGenericContext<T_0_0>
 #endif // __cpp_concepts
 class JSRepresentable { } SWIFT_UNAVAILABLE_MSG("protocol 'JSRepresentable' can not yet be represented in C++");
-
-class JSValuesBuffer { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JSValuesBuffer' can not yet be represented in C++");
 
 class JavaScriptActor { } SWIFT_UNAVAILABLE_MSG("Swift actor 'JavaScriptActor' cannot be represented in C++");
 
@@ -1258,6 +1252,8 @@ class JavaScriptError { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptE
 class JavaScriptFunction { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptFunction' can not yet be represented in C++");
 
 class JavaScriptHostObject { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptHostObject' can not yet be represented in C++");
+
+class JavaScriptNativeState { } SWIFT_UNAVAILABLE_MSG("Swift class 'JavaScriptNativeState' cannot be represented in C++");
 
 class JavaScriptObject { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptObject' can not yet be represented in C++");
 
@@ -1281,9 +1277,9 @@ class JavaScriptTypedArray { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaSc
 
 class JavaScriptValue { } SWIFT_UNAVAILABLE_MSG("Swift class 'JavaScriptValue' cannot be represented in C++");
 
-class JavaScriptWeakObject { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptWeakObject' can not yet be represented in C++");
+class JavaScriptValuesBuffer { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptValuesBuffer' can not yet be represented in C++");
 
-class NativeState { } SWIFT_UNAVAILABLE_MSG("Swift class 'NativeState' cannot be represented in C++");
+class JavaScriptWeakObject { } SWIFT_UNAVAILABLE_MSG("noncopyable struct 'JavaScriptWeakObject' can not yet be represented in C++");
 
 class ScriptEvaluationError { } SWIFT_UNAVAILABLE_MSG("Swift struct 'ScriptEvaluationError' cannot be represented in C++");
 

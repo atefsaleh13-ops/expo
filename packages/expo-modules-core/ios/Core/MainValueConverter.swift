@@ -26,7 +26,7 @@ public struct MainValueConverter {
    It **must** be run on the thread used by the JavaScript runtime.
    */
   @JavaScriptActor
-  public func toNative(_ values: borrowing JSValuesBuffer, _ types: [AnyDynamicType]) throws -> [Any] {
+  public func toNative(_ values: borrowing JavaScriptValuesBuffer, _ types: [AnyDynamicType]) throws -> [Any] {
     return try values.map { value, index in
       let type = types[index]
 

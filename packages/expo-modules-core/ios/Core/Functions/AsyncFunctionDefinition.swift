@@ -65,7 +65,7 @@ public class AsyncFunctionDefinition<Args, FirstArgType, ReturnType>: AnyAsyncFu
   var takesOwner: Bool = false
 
   @JavaScriptActor
-  func call(_ appContext: AppContext, this: borrowing JavaScriptValue, arguments: consuming JSValuesBuffer, callback: @Sendable @escaping (consuming FunctionCallResult) -> Void) {
+  func call(_ appContext: AppContext, this: borrowing JavaScriptValue, arguments: consuming JavaScriptValuesBuffer, callback: @Sendable @escaping (consuming FunctionCallResult) -> Void) {
     let promise = Promise(appContext: appContext) { value in
       try? appContext.runtime.schedule(priority: .immediate) {
         do {

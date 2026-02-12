@@ -6,7 +6,7 @@ internal struct FatalError {
    Signals that a function or one of its case is not implemented (intentionally or not).
    */
   internal static func unimplemented() -> Never {
-    FatalError.unimplemented()
+    fatalError("Unimplemented")
   }
 
   /**

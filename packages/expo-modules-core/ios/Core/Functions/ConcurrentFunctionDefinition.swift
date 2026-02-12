@@ -46,7 +46,7 @@ public final class ConcurrentFunctionDefinition<Args, FirstArgType, ReturnType>:
   var requiresMainActor: Bool = false
 
   @JavaScriptActor
-  func call(_ appContext: AppContext, this: borrowing JavaScriptValue, arguments: consuming JSValuesBuffer, callback: @Sendable @escaping (consuming FunctionCallResult) -> Void) {
+  func call(_ appContext: AppContext, this: borrowing JavaScriptValue, arguments: consuming JavaScriptValuesBuffer, callback: @Sendable @escaping (consuming FunctionCallResult) -> Void) {
     let nativeArguments = NonisolatedUnsafeVar<[Any]>([])
 
     do {
@@ -104,7 +104,7 @@ public final class ConcurrentFunctionDefinition<Args, FirstArgType, ReturnType>:
   }
 
   @JavaScriptActor
-  func call(_ appContext: AppContext, this: borrowing JavaScriptValue, arguments: consuming JSValuesBuffer) async throws -> JavaScriptValue {
+  func call(_ appContext: AppContext, this: borrowing JavaScriptValue, arguments: consuming JavaScriptValuesBuffer) async throws -> JavaScriptValue {
     var nativeArguments: [Any?] = []
 
     do {

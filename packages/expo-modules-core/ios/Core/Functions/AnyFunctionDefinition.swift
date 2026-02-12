@@ -46,7 +46,7 @@ internal protocol AnyFunctionDefinition: AnyDefinition, JavaScriptObjectBuilder,
 //  func call(
 //    _ appContext: AppContext,
 //    this: borrowing JavaScriptValue,
-//    arguments: consuming JSValuesBuffer,
+//    arguments: consuming JavaScriptValuesBuffer,
 //    callback: @Sendable @escaping (consuming FunctionCallResult) -> Void
 //  )
 }
