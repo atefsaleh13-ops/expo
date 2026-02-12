@@ -23,7 +23,7 @@ public struct JavaScriptFunction: JavaScriptType, ~Copyable {
   @discardableResult
   public func call(this: borrowing JavaScriptObject, arguments: consuming JSValuesBuffer? = nil) throws -> JavaScriptValue {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return try capturingCppErrors {
       return JavaScriptValue(runtime, expo.callFunctionWithThis(runtime.pointee, pointee, this.pointee, arguments?.baseAddress, arguments?.count ?? 0))
@@ -36,7 +36,7 @@ public struct JavaScriptFunction: JavaScriptType, ~Copyable {
   @discardableResult
   public func call(arguments: consuming JSValuesBuffer? = nil) throws -> JavaScriptValue {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return try capturingCppErrors {
       return JavaScriptValue(runtime, expo.callFunction(runtime.pointee, pointee, arguments?.baseAddress, arguments?.count ?? 0))
@@ -49,7 +49,7 @@ public struct JavaScriptFunction: JavaScriptType, ~Copyable {
   @discardableResult
   public func call<each T: JSRepresentable>(this: borrowing JavaScriptObject, arguments: repeat each T) throws -> JavaScriptValue {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     let argumentsBuffer = JSValuesBuffer.allocate(in: runtime, with: repeat each arguments)
     return try self.call(this: this, arguments: argumentsBuffer)
@@ -61,7 +61,7 @@ public struct JavaScriptFunction: JavaScriptType, ~Copyable {
   @discardableResult
   public func call<each T: JSRepresentable>(arguments: repeat each T) throws -> JavaScriptValue {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     let argumentsBuffer = JSValuesBuffer.allocate(in: runtime, with: repeat each arguments)
     return try self.call(arguments: argumentsBuffer)
@@ -72,7 +72,7 @@ public struct JavaScriptFunction: JavaScriptType, ~Copyable {
    */
   public func callAsConstructor(_ arguments: consuming JSValuesBuffer? = nil) throws -> JavaScriptValue {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return try capturingCppErrors {
       let jsiResult = expo.callAsConstructor(runtime.pointee, pointee, arguments?.baseAddress, arguments?.count ?? 0)
@@ -85,7 +85,7 @@ public struct JavaScriptFunction: JavaScriptType, ~Copyable {
    */
   public func callAsConstructor<each T: JSRepresentable>(_ arguments: repeat each T) throws -> JavaScriptValue {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     let argumentsBuffer = JSValuesBuffer.allocate(in: runtime, with: repeat each arguments)
     return try callAsConstructor(argumentsBuffer)
@@ -95,7 +95,7 @@ public struct JavaScriptFunction: JavaScriptType, ~Copyable {
 
   public func asValue() -> JavaScriptValue {
     guard let jsiRuntime = runtime?.pointee else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return JavaScriptValue(runtime, expo.valueFromFunction(jsiRuntime, pointee))
   }
@@ -105,14 +105,14 @@ public struct JavaScriptFunction: JavaScriptType, ~Copyable {
    */
   internal func asJSIValue() -> facebook.jsi.Value {
     guard let jsiRunetime = runtime?.pointee else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return expo.valueFromFunction(jsiRunetime, pointee)
   }
 
   public func asObject() -> JavaScriptObject {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     let jsiRuntime = runtime.pointee
     return JavaScriptObject(runtime, expo.valueFromFunction(jsiRuntime, pointee).getObject(jsiRuntime))

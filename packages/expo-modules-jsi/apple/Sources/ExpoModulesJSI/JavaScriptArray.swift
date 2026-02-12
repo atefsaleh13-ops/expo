@@ -25,7 +25,7 @@ public struct JavaScriptArray: JavaScriptType, ~Copyable {
    */
   public var size: Int {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return pointee.size(runtime.pointee)
   }
@@ -39,7 +39,7 @@ public struct JavaScriptArray: JavaScriptType, ~Copyable {
    */
   public func getValue(atIndex index: Int) throws -> JavaScriptValue {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     guard (0..<size).contains(index) else {
       throw Errors.indexOutOfRange(index: index, size: size)
@@ -85,7 +85,7 @@ public struct JavaScriptArray: JavaScriptType, ~Copyable {
    */
   public func asValue() -> JavaScriptValue {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return JavaScriptValue(runtime, expo.valueFromArray(runtime.pointee, pointee))
   }

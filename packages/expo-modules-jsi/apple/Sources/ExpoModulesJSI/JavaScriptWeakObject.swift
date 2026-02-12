@@ -32,7 +32,7 @@ public struct JavaScriptWeakObject: JavaScriptType, ~Copyable {
    */
   public func lock() -> JavaScriptObject? {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     let jsiValue = pointee.lock(runtime.pointee)
     return jsiValue.isObject() ? JavaScriptObject(runtime, jsiValue.getObject(runtime.pointee)) : nil

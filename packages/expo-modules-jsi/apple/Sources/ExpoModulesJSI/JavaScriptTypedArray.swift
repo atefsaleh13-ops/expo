@@ -20,7 +20,7 @@ public struct JavaScriptTypedArray: ~Copyable {
 
   public func getUnsafeMutableRawPointer() -> UnsafeMutableRawPointer {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return pointee.__getRawPointerUnsafe(runtime.pointee)
   }
@@ -65,7 +65,7 @@ public struct JavaScriptTypedArray: ~Copyable {
 
   public func getProperty(_ name: String) -> JavaScriptValue {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return JavaScriptValue(runtime, pointee.getProperty(runtime.pointee, name))
   }

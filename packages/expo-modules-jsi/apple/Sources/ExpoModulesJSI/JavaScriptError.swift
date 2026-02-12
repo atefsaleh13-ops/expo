@@ -17,14 +17,14 @@ public struct JavaScriptError: JavaScriptType, ~Copyable {
 
   public func asValue() -> JavaScriptValue {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return JavaScriptValue(runtime, expo.valueFromError(runtime.pointee, pointee))
   }
 
   internal func asJSIValue() -> facebook.jsi.Value {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return expo.valueFromError(runtime.pointee, pointee)
   }

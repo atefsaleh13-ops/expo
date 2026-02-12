@@ -65,7 +65,7 @@ public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error 
     case .number:
       return .init(nil, facebook.jsi.Value(getDouble()))
     default:
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
   }
 
@@ -99,21 +99,21 @@ public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error 
 
   public func isArray() -> Bool {
     guard let jsiRuntime = runtime?.pointee else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return pointee.isObject() && pointee.getObject(jsiRuntime).isArray(jsiRuntime)
   }
 
   public func isFunction() -> Bool {
     guard let jsiRuntime = runtime?.pointee else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return pointee.isObject() && pointee.getObject(jsiRuntime).isFunction(jsiRuntime)
   }
 
   public func isTypedArray() -> Bool {
     guard let jsiRuntime = runtime?.pointee else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return pointee.isObject() && expo.isTypedArray(jsiRuntime, pointee.getObject(jsiRuntime))
   }
@@ -124,7 +124,7 @@ public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error 
    */
   public func `is`(_ typeName: String) -> Bool {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return isObject() && getObject().instanceOf(runtime.global().getPropertyAsFunction(typeName))
   }
@@ -197,7 +197,7 @@ public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error 
    */
   public func getString() -> String {
     guard let jsiRuntime = runtime?.pointee else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     assert(isString(), "Value is not a string")
     return String(pointee.getString(jsiRuntime).utf16(jsiRuntime))
@@ -208,7 +208,7 @@ public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error 
    */
   public func getObject() -> JavaScriptObject {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     assert(isObject(), "Value is not an object")
     return JavaScriptObject(runtime, pointee.getObject(runtime.pointee))
@@ -219,7 +219,7 @@ public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error 
    */
   public func getArray() -> JavaScriptArray {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     assert(isArray(), "Value is not an array")
     return JavaScriptArray(runtime, pointee.getObject(runtime.pointee).getArray(runtime.pointee))
@@ -230,7 +230,7 @@ public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error 
    */
   public func getFunction() -> JavaScriptFunction {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     assert(isFunction(), "Value is not a function")
     return JavaScriptFunction(runtime, pointee.getObject(runtime.pointee).getFunction(runtime.pointee))
@@ -241,7 +241,7 @@ public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error 
    */
   public func getTypedArray() -> JavaScriptTypedArray {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     assert(isTypedArray(), "Value is not a typed array")
     return JavaScriptTypedArray(runtime, expo.TypedArray(runtime.pointee, pointee.getObject(runtime.pointee)))
@@ -253,7 +253,7 @@ public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error 
   @JavaScriptActor
   public func getPromise() throws -> JavaScriptPromise {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     assert(self.is("Promise"), "Value is not a promise")
     return JavaScriptPromise(runtime, getObject())
@@ -264,7 +264,7 @@ public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error 
    */
   public func toString() -> String {
     guard let jsiRuntime = runtime?.pointee else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return String(pointee.toString(jsiRuntime).utf16(jsiRuntime))
   }
@@ -337,7 +337,7 @@ public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error 
       case .number:
         return String(getDouble())
       default:
-        JS.runtimeLostFatalError()
+        FatalError.runtimeLost()
       }
     }
     let value = try runtime
@@ -370,7 +370,7 @@ public final class JavaScriptValue: JavaScriptType, Equatable, Escapable, Error 
     case .number:
       return facebook.jsi.Value(getDouble())
     default:
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
   }
 

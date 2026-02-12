@@ -24,7 +24,7 @@ public protocol JSRepresentable: Sendable, ~Copyable {
 public extension JSRepresentable {
   static func fromJSValue(_ value: JavaScriptValue) -> Self {
     guard let jsiRuntime = value.runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     if let JSIRepresentableType = Self.self as? JSIRepresentable.Type {
       return JSIRepresentableType.fromJSIValue(value.pointee, in: jsiRuntime.pointee) as! Self

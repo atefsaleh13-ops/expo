@@ -36,7 +36,7 @@ public struct JSValuesBuffer: JavaScriptType, ~Copyable {
 
   public subscript(index: Int) -> JavaScriptValue {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     return JavaScriptValue(runtime, facebook.jsi.Value(runtime.pointee, bufferPointer[index]))
   }
@@ -44,7 +44,7 @@ public struct JSValuesBuffer: JavaScriptType, ~Copyable {
   @discardableResult
   internal consuming func set<T: JSIRepresentable>(value: borrowing T, atIndex index: Int) -> JSValuesBuffer where T: ~Copyable {
     guard let jsiRuntime = runtime?.pointee else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     guard index < count else {
       fatalError("Cannot add values to a JSValuesBuffer beyond its capacity")
@@ -68,7 +68,7 @@ public struct JSValuesBuffer: JavaScriptType, ~Copyable {
   @JavaScriptActor
   public func copy() -> JSValuesBuffer {
     guard let runtime else {
-      JS.runtimeLostFatalError()
+      FatalError.runtimeLost()
     }
     let bufferCopy = JSValuesBuffer.copying(in: runtime, buffer: bufferPointer)
     return JSValuesBuffer(runtime, buffer: bufferCopy)
