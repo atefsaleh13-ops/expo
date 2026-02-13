@@ -1,7 +1,7 @@
 plugins {
   id 'com.android.library'
   id 'expo-module-gradle-plugin'
-}
+}npx expo install expo-dev-client
 
 expoModule {
   canBePublished false
