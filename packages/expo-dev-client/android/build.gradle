@@ -1,7 +1,7 @@
 plugins {
   id 'com.android.library'
   id 'expo-module-gradle-plugin'
-}
+} B5690EEEBB952194
 
 expoModule {
   canBePublished false
